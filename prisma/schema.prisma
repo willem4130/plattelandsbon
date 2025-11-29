@@ -1,0 +1,404 @@
+// Prisma schema for Oom Gerrit Voucher System (Plattelandsbon)
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ==========================================
+// USER & AUTHENTICATION
+// ==========================================
+
+enum UserRole {
+  CONSUMER      // Recreanten - browse and claim vouchers
+  BUSINESS      // Ondernemers - create and manage vouchers
+  ADMIN         // Platform administrators
+}
+
+model User {
+  id                  String         @id @default(cuid())
+  email               String         @unique
+  name                String?
+  role                UserRole       @default(CONSUMER)
+  emailVerified       DateTime?
+  image               String?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+  // Relations
+  accounts            Account[]
+  sessions            Session[]
+  business            Business?      // One-to-one for BUSINESS users
+  voucherClaims       VoucherClaim[]
+  redemptions         Redemption[]
+
+  @@index([email])
+  @@index([role])
+}
+
+// NextAuth models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ==========================================
+// BUSINESS & CATEGORIES
+// ==========================================
+
+enum BusinessStatus {
+  PENDING       // Awaiting admin verification
+  VERIFIED      // Approved by admin
+  SUSPENDED     // Temporarily suspended
+  REJECTED      // Rejected by admin
+}
+
+model Business {
+  id                  String         @id @default(cuid())
+  userId              String         @unique
+
+  // Business details
+  name                String
+  description         String?        @db.Text
+  address             String?
+  city                String?
+  postalCode          String?
+  province            String?
+  phone               String?
+  website             String?
+
+  // Verification
+  status              BusinessStatus @default(PENDING)
+  verifiedAt          DateTime?
+  verificationNotes   String?
+
+  // Media
+  logo                String?        // URL to logo image
+  photos              Json?          // Array of photo URLs
+
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+  // Relations
+  user                User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vouchers            Voucher[]
+  businessCategories  BusinessCategory[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([city])
+  @@index([province])
+}
+
+model Category {
+  id                  String         @id @default(cuid())
+  name                String         @unique
+  slug                String         @unique
+  description         String?
+  icon                String?        // Icon name or URL
+  sortOrder           Int            @default(0)
+
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+  // Relations
+  businessCategories  BusinessCategory[]
+
+  @@index([slug])
+}
+
+// Many-to-many relation between Business and Category
+model BusinessCategory {
+  id          String   @id @default(cuid())
+  businessId  String
+  categoryId  String
+
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([businessId, categoryId])
+  @@index([businessId])
+  @@index([categoryId])
+}
+
+// ==========================================
+// VOUCHERS
+// ==========================================
+
+enum VoucherStatus {
+  DRAFT         // Created but not submitted
+  PENDING       // Awaiting admin approval
+  ACTIVE        // Approved and active
+  PAUSED        // Temporarily paused by business
+  EXPIRED       // Past end date
+  REJECTED      // Rejected by admin
+}
+
+enum DiscountType {
+  CASH          // Fixed cash discount (e.g., €10 off)
+  PERCENTAGE    // Percentage discount (e.g., 20% off)
+  PRODUCT       // Free product
+  SERVICE       // Free service
+}
+
+model Voucher {
+  id                  String         @id @default(cuid())
+  businessId          String
+
+  // Voucher details
+  title               String
+  description         String         @db.Text
+  discountType        DiscountType
+  discountValue       Float?         // Amount or percentage
+  discountDescription String?        // Description for PRODUCT/SERVICE type
+
+  // Terms & conditions
+  terms               String?        @db.Text
+  minimumPurchase     Float?
+
+  // Validity period
+  startDate           DateTime
+  endDate             DateTime
+
+  // Limits
+  maxClaims           Int?           // Maximum number of claims (null = unlimited)
+  claimsCount         Int            @default(0) // Current claim count
+
+  // Status
+  status              VoucherStatus  @default(DRAFT)
+  approvedAt          DateTime?
+  rejectedAt          DateTime?
+  rejectionReason     String?
+
+  // Media
+  image               String?        // Featured image URL
+
+  // SEO & metadata
+  slug                String?        @unique
+  metadata            Json?          // Additional data
+
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+  // Relations
+  business            Business       @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  claims              VoucherClaim[]
+  events              VoucherEvent[]
+
+  @@index([businessId])
+  @@index([status])
+  @@index([startDate, endDate])
+  @@index([slug])
+}
+
+// ==========================================
+// VOUCHER CLAIMS & REDEMPTIONS
+// ==========================================
+
+enum ClaimStatus {
+  CLAIMED       // User has claimed the voucher
+  REDEEMED      // Voucher has been redeemed
+  EXPIRED       // Claim expired before redemption
+  CANCELLED     // Claim cancelled by user
+}
+
+model VoucherClaim {
+  id              String       @id @default(cuid())
+  voucherId       String
+  userId          String
+
+  // Claim details
+  claimCode       String       @unique // Unique code for redemption
+  status          ClaimStatus  @default(CLAIMED)
+  expiresAt       DateTime?    // Optional claim expiration
+
+  claimedAt       DateTime     @default(now())
+  redeemedAt      DateTime?
+  cancelledAt     DateTime?
+
+  // Relations
+  voucher         Voucher      @relation(fields: [voucherId], references: [id], onDelete: Cascade)
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  redemption      Redemption?
+
+  @@index([voucherId])
+  @@index([userId])
+  @@index([status])
+  @@index([claimCode])
+}
+
+model Redemption {
+  id              String       @id @default(cuid())
+  claimId         String       @unique
+  userId          String
+
+  // Redemption details
+  redeemedAt      DateTime     @default(now())
+  notes           String?
+
+  // Relations
+  claim           VoucherClaim @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([claimId])
+  @@index([userId])
+  @@index([redeemedAt])
+}
+
+// ==========================================
+// VOUCHER EVENTS & ANALYTICS
+// ==========================================
+
+enum EventType {
+  VIEW          // Voucher viewed
+  CLAIM         // Voucher claimed
+  REDEEM        // Voucher redeemed
+  SHARE         // Voucher shared
+}
+
+model VoucherEvent {
+  id          String    @id @default(cuid())
+  voucherId   String
+  eventType   EventType
+
+  // Event metadata
+  userId      String?   // Null if anonymous
+  metadata    Json?     // Additional event data (e.g., referrer, device)
+
+  createdAt   DateTime  @default(now())
+
+  // Relations
+  voucher     Voucher   @relation(fields: [voucherId], references: [id], onDelete: Cascade)
+
+  @@index([voucherId])
+  @@index([eventType])
+  @@index([createdAt])
+}
+
+// ==========================================
+// COMPETITOR SCRAPING
+// ==========================================
+
+enum CompetitorSource {
+  GROUPON
+  SOCIAL_DEAL
+  WEEKENDJEWEG
+  OTHER
+}
+
+model CompetitorVoucher {
+  id                  String           @id @default(cuid())
+
+  // Source tracking
+  source              CompetitorSource
+  externalId          String?          // ID from competitor site
+  sourceUrl           String?          // Original URL
+
+  // Voucher details
+  title               String
+  description         String?          @db.Text
+  price               Float?
+  originalPrice       Float?
+  discount            Float?
+
+  // Location
+  city                String?
+  region              String?
+
+  // Scraping metadata
+  scrapedAt           DateTime         @default(now())
+  lastSeenAt          DateTime         @default(now())
+  isActive            Boolean          @default(true)
+
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  @@unique([source, externalId])
+  @@index([source])
+  @@index([city])
+  @@index([isActive])
+  @@index([scrapedAt])
+}
+
+// ==========================================
+// AI RECOMMENDATIONS
+// ==========================================
+
+model UserRecommendation {
+  id              String   @id @default(cuid())
+  userId          String
+  voucherId       String
+
+  // Recommendation metadata
+  score           Float    // Relevance score (0-1)
+  reason          String?  // Why this was recommended
+  model           String?  // AI model used (e.g., "openai-gpt-4", "rule-based")
+
+  // Tracking
+  shown           Boolean  @default(false)
+  clicked         Boolean  @default(false)
+  claimed         Boolean  @default(false)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([userId, voucherId])
+  @@index([userId])
+  @@index([voucherId])
+  @@index([score])
+}
+
+// ==========================================
+// SYSTEM CONFIGURATION
+// ==========================================
+
+model SystemConfig {
+  id                        String   @id @default(cuid())
+  key                       String   @unique
+  value                     String
+  description               String?
+
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  @@index([key])
+}
