@@ -9,8 +9,8 @@ import { Toaster } from '@/components/ui/sonner'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Simplicate Automations',
-  description: 'Production-ready automation system for Simplicate with contract distribution, hours reminders, and invoice generation',
+  title: 'Oom Gerrit - Plattelandsbon',
+  description: 'Dutch rural tourism voucher platform connecting businesses with consumers',
 }
 
 export default function RootLayout({
@@ -19,7 +19,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="nl" suppressHydrationWarning>
       <body className={inter.className}>
         <TRPCReactProvider>{children}</TRPCReactProvider>
         <Toaster />

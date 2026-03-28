@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { apiResponse } from '@/lib/api-middleware'
-import { db } from '@/server/db'
+import { db } from '@/infrastructure/db/prisma'
 
 /**
  * GET /api/health - Health check endpoint

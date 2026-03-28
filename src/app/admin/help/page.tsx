@@ -17,12 +17,7 @@ import {
   Mail,
   FileText,
   Bell,
-  Settings,
-  Users,
-  FolderKanban,
-  DollarSign,
   Activity,
-  CheckCircle2,
   AlertCircle,
   Info,
 } from 'lucide-react'
@@ -147,7 +142,7 @@ export default function HelpPage() {
                   <li>Selecteer de maand waarvoor je een rapport wilt maken</li>
                   <li>Kies de medewerker uit de lijst</li>
                   <li>Bekijk het rapport preview met alle details</li>
-                  <li>Klik op "Verstuur" om het rapport per e-mail te verzenden</li>
+                  <li>Klik op &quot;Verstuur&quot; om het rapport per e-mail te verzenden</li>
                 </ol>
               </div>
               <div className="space-y-2">
@@ -182,7 +177,7 @@ export default function HelpPage() {
                 <p className="font-medium">Automatisch vs Handmatig</p>
                 <ul className="list-disc list-inside text-sm space-y-1 text-muted-foreground">
                   <li><strong>Automatisch:</strong> Elke maandag om 9:00 worden herinneringen verzonden</li>
-                  <li><strong>Handmatig:</strong> Klik op "Verstuur Herinneringen" om direct te versturen</li>
+                  <li><strong>Handmatig:</strong> Klik op &quot;Verstuur Herinneringen&quot; om direct te versturen</li>
                 </ul>
               </div>
               <div className="space-y-2">
