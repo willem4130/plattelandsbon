@@ -8,7 +8,15 @@ export interface CategoryProps {
 }
 
 export class Category {
-  constructor(private props: CategoryProps) {}
+  protected constructor(private props: CategoryProps) {}
+
+  static create(props: CategoryProps): Category {
+    return new Category(props)
+  }
+
+  static fromProps(props: CategoryProps): Category {
+    return new Category(props)
+  }
 
   get id() {
     return this.props.id

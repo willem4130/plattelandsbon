@@ -1,5 +1,6 @@
 import { Voucher } from '../entities/Voucher'
 import { VoucherStatus } from '../value-objects/VoucherStatus'
+import type { TransactionContext, PaginationOptions } from '../types'
 
 export interface VoucherSearchFilters {
   status?: VoucherStatus
@@ -11,11 +12,11 @@ export interface VoucherSearchFilters {
 }
 
 export interface IVoucherRepository {
-  findById(id: string): Promise<Voucher | null>
-  findBySlug(slug: string): Promise<Voucher | null>
-  findByBusinessId(businessId: string): Promise<Voucher[]>
-  findByStatus(status: VoucherStatus): Promise<Voucher[]>
-  search(filters: VoucherSearchFilters): Promise<{ vouchers: Voucher[]; total: number }>
+  findById(id: string, tx?: TransactionContext): Promise<Voucher | null>
+  findBySlug(slug: string, tx?: TransactionContext): Promise<Voucher | null>
+  findByBusinessId(businessId: string, options?: PaginationOptions, tx?: TransactionContext): Promise<Voucher[]>
+  findByStatus(status: VoucherStatus, options?: PaginationOptions, tx?: TransactionContext): Promise<Voucher[]>
+  search(filters: VoucherSearchFilters, tx?: TransactionContext): Promise<{ vouchers: Voucher[]; total: number }>
   create(data: {
     businessId: string
     title: string
@@ -31,11 +32,12 @@ export interface IVoucherRepository {
     image?: string
     slug: string
     status?: VoucherStatus
-  }): Promise<Voucher>
+  }, tx?: TransactionContext): Promise<Voucher>
   updateStatus(
     id: string,
     status: VoucherStatus,
     reason?: string,
+    tx?: TransactionContext,
   ): Promise<Voucher>
-  incrementClaimCount(id: string): Promise<void>
+  incrementClaimCount(id: string, tx?: TransactionContext): Promise<void>
 }

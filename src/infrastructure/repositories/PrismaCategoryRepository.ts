@@ -1,37 +1,45 @@
-import type { PrismaClient } from '@prisma/client'
+import type { PrismaClient, Category as PrismaCategoryRecord } from '@prisma/client'
 import { Category } from '@/domain/entities/Category'
 import type { ICategoryRepository } from '@/domain/repositories/ICategoryRepository'
+import type { TransactionContext } from '@/domain/types'
+import { BaseRepository } from './BaseRepository'
 
-function toDomain(
-  record: NonNullable<Awaited<ReturnType<PrismaClient['category']['findFirst']>>>,
-): Category {
-  return new Category({
-    id: record.id,
-    name: record.name,
-    slug: record.slug,
-    description: record.description,
-    icon: record.icon,
-    sortOrder: record.sortOrder,
-  })
-}
+export class PrismaCategoryRepository
+  extends BaseRepository<Category, PrismaCategoryRecord>
+  implements ICategoryRepository
+{
+  constructor(prisma: PrismaClient) {
+    super(prisma)
+  }
 
-export class PrismaCategoryRepository implements ICategoryRepository {
-  constructor(private prisma: PrismaClient) {}
+  protected toDomain(record: PrismaCategoryRecord): Category {
+    return Category.fromProps({
+      id: record.id,
+      name: record.name,
+      slug: record.slug,
+      description: record.description,
+      icon: record.icon,
+      sortOrder: record.sortOrder,
+    })
+  }
 
-  async findAll(): Promise<Category[]> {
-    const records = await this.prisma.category.findMany({
+  async findAll(tx?: TransactionContext): Promise<Category[]> {
+    const client = this.getClient(tx) as PrismaClient
+    const records = await client.category.findMany({
       orderBy: { sortOrder: 'asc' },
     })
-    return records.map(toDomain)
+    return this.mapMany(records)
   }
 
-  async findById(id: string): Promise<Category | null> {
-    const record = await this.prisma.category.findUnique({ where: { id } })
-    return record ? toDomain(record) : null
+  async findById(id: string, tx?: TransactionContext): Promise<Category | null> {
+    const client = this.getClient(tx) as PrismaClient
+    const record = await client.category.findUnique({ where: { id } })
+    return this.mapOrNull(record)
   }
 
-  async findBySlug(slug: string): Promise<Category | null> {
-    const record = await this.prisma.category.findUnique({ where: { slug } })
-    return record ? toDomain(record) : null
+  async findBySlug(slug: string, tx?: TransactionContext): Promise<Category | null> {
+    const client = this.getClient(tx) as PrismaClient
+    const record = await client.category.findUnique({ where: { slug } })
+    return this.mapOrNull(record)
   }
 }

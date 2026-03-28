@@ -1,16 +1,17 @@
 import { VoucherClaim } from '../entities/VoucherClaim'
 import { ClaimStatus } from '../value-objects/ClaimStatus'
+import type { TransactionContext, PaginationOptions } from '../types'
 
 export interface IClaimRepository {
-  findById(id: string): Promise<VoucherClaim | null>
-  findByClaimCode(code: string): Promise<VoucherClaim | null>
-  findByUserId(userId: string): Promise<VoucherClaim[]>
-  findByVoucherId(voucherId: string): Promise<VoucherClaim[]>
+  findById(id: string, tx?: TransactionContext): Promise<VoucherClaim | null>
+  findByClaimCode(code: string, tx?: TransactionContext): Promise<VoucherClaim | null>
+  findByUserId(userId: string, options?: PaginationOptions, tx?: TransactionContext): Promise<VoucherClaim[]>
+  findByVoucherId(voucherId: string, options?: PaginationOptions, tx?: TransactionContext): Promise<VoucherClaim[]>
   create(data: {
     voucherId: string
     userId: string
     claimCode: string
     expiresAt?: Date
-  }): Promise<VoucherClaim>
-  updateStatus(id: string, status: ClaimStatus): Promise<VoucherClaim>
+  }, tx?: TransactionContext): Promise<VoucherClaim>
+  updateStatus(id: string, status: ClaimStatus, tx?: TransactionContext): Promise<VoucherClaim>
 }

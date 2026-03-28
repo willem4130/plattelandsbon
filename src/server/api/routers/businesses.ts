@@ -77,7 +77,7 @@ export const businessesRouter = createTRPCRouter({
 
   getMyBusiness: protectedProcedure.query(async ({ ctx }) => {
     const useCase = createGetBusinessProfileUseCase()
-    return await useCase.executeByUserId(ctx.session.user.id)
+    return await useCase.execute({ by: 'userId', userId: ctx.session.user.id })
   }),
 
   getById: publicProcedure
@@ -85,7 +85,7 @@ export const businessesRouter = createTRPCRouter({
     .query(async ({ input }) => {
       try {
         const useCase = createGetBusinessProfileUseCase()
-        return await useCase.executeById(input.id)
+        return await useCase.execute({ by: 'id', id: input.id })
       } catch (error) {
         if (error instanceof DomainError) {
           throw new TRPCError({ code: 'NOT_FOUND', message: error.message })

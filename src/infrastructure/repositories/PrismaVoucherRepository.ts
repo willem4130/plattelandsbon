@@ -1,4 +1,4 @@
-import type { PrismaClient, Prisma } from '@prisma/client'
+import type { PrismaClient, Prisma, Voucher as PrismaVoucherRecord } from '@prisma/client'
 import { type DiscountType as PrismaDiscountType, type VoucherStatus as PrismaVoucherStatus } from '@prisma/client'
 import { Voucher } from '@/domain/entities/Voucher'
 import type { DiscountType } from '@/domain/value-objects/DiscountType'
@@ -7,67 +7,90 @@ import type {
   IVoucherRepository,
   VoucherSearchFilters,
 } from '@/domain/repositories/IVoucherRepository'
+import type { TransactionContext, PaginationOptions } from '@/domain/types'
+import { BaseRepository } from './BaseRepository'
 
-function toDomain(
-  record: NonNullable<Awaited<ReturnType<PrismaClient['voucher']['findFirst']>>>,
-): Voucher {
-  return new Voucher({
-    id: record.id,
-    businessId: record.businessId,
-    title: record.title,
-    description: record.description,
-    discountType: record.discountType as DiscountType,
-    discountValue: record.discountValue,
-    discountDescription: record.discountDescription,
-    terms: record.terms,
-    minimumPurchase: record.minimumPurchase,
-    startDate: record.startDate,
-    endDate: record.endDate,
-    maxClaims: record.maxClaims,
-    claimsCount: record.claimsCount,
-    status: record.status as VoucherStatus,
-    approvedAt: record.approvedAt,
-    rejectedAt: record.rejectedAt,
-    rejectionReason: record.rejectionReason,
-    image: record.image,
-    slug: record.slug,
-    createdAt: record.createdAt,
-    updatedAt: record.updatedAt,
-  })
-}
-
-export class PrismaVoucherRepository implements IVoucherRepository {
-  constructor(private prisma: PrismaClient) {}
-
-  async findById(id: string): Promise<Voucher | null> {
-    const record = await this.prisma.voucher.findUnique({ where: { id } })
-    return record ? toDomain(record) : null
+export class PrismaVoucherRepository
+  extends BaseRepository<Voucher, PrismaVoucherRecord>
+  implements IVoucherRepository
+{
+  constructor(prisma: PrismaClient) {
+    super(prisma)
   }
 
-  async findBySlug(slug: string): Promise<Voucher | null> {
-    const record = await this.prisma.voucher.findUnique({ where: { slug } })
-    return record ? toDomain(record) : null
+  protected toDomain(record: PrismaVoucherRecord): Voucher {
+    return Voucher.fromProps({
+      id: record.id,
+      businessId: record.businessId,
+      title: record.title,
+      description: record.description,
+      discountType: record.discountType as DiscountType,
+      discountValue: record.discountValue,
+      discountDescription: record.discountDescription,
+      terms: record.terms,
+      minimumPurchase: record.minimumPurchase,
+      startDate: record.startDate,
+      endDate: record.endDate,
+      maxClaims: record.maxClaims,
+      claimsCount: record.claimsCount,
+      status: record.status as VoucherStatus,
+      approvedAt: record.approvedAt,
+      rejectedAt: record.rejectedAt,
+      rejectionReason: record.rejectionReason,
+      image: record.image,
+      slug: record.slug,
+      createdAt: record.createdAt,
+      updatedAt: record.updatedAt,
+    })
   }
 
-  async findByBusinessId(businessId: string): Promise<Voucher[]> {
-    const records = await this.prisma.voucher.findMany({
+  async findById(id: string, tx?: TransactionContext): Promise<Voucher | null> {
+    const client = this.getClient(tx) as PrismaClient
+    const record = await client.voucher.findUnique({ where: { id } })
+    return this.mapOrNull(record)
+  }
+
+  async findBySlug(slug: string, tx?: TransactionContext): Promise<Voucher | null> {
+    const client = this.getClient(tx) as PrismaClient
+    const record = await client.voucher.findUnique({ where: { slug } })
+    return this.mapOrNull(record)
+  }
+
+  async findByBusinessId(
+    businessId: string,
+    options?: PaginationOptions,
+    tx?: TransactionContext,
+  ): Promise<Voucher[]> {
+    const client = this.getClient(tx) as PrismaClient
+    const records = await client.voucher.findMany({
       where: { businessId },
       orderBy: { createdAt: 'desc' },
+      ...(options?.skip !== undefined && { skip: options.skip }),
+      ...(options?.take !== undefined && { take: options.take }),
     })
-    return records.map(toDomain)
+    return this.mapMany(records)
   }
 
-  async findByStatus(status: VoucherStatus): Promise<Voucher[]> {
-    const records = await this.prisma.voucher.findMany({
+  async findByStatus(
+    status: VoucherStatus,
+    options?: PaginationOptions,
+    tx?: TransactionContext,
+  ): Promise<Voucher[]> {
+    const client = this.getClient(tx) as PrismaClient
+    const records = await client.voucher.findMany({
       where: { status },
       orderBy: { createdAt: 'desc' },
+      ...(options?.skip !== undefined && { skip: options.skip }),
+      ...(options?.take !== undefined && { take: options.take }),
     })
-    return records.map(toDomain)
+    return this.mapMany(records)
   }
 
   async search(
     filters: VoucherSearchFilters,
+    tx?: TransactionContext,
   ): Promise<{ vouchers: Voucher[]; total: number }> {
+    const client = this.getClient(tx) as PrismaClient
     const where: Prisma.VoucherWhereInput = {
       status: filters.status ?? 'ACTIVE',
     }
@@ -88,35 +111,39 @@ export class PrismaVoucherRepository implements IVoucherRepository {
     }
 
     const [records, total] = await Promise.all([
-      this.prisma.voucher.findMany({
+      client.voucher.findMany({
         where,
         orderBy: { createdAt: 'desc' },
         take: filters.limit ?? 20,
         skip: filters.offset ?? 0,
       }),
-      this.prisma.voucher.count({ where }),
+      client.voucher.count({ where }),
     ])
 
-    return { vouchers: records.map(toDomain), total }
+    return { vouchers: this.mapMany(records), total }
   }
 
-  async create(data: {
-    businessId: string
-    title: string
-    description: string
-    discountType: string
-    discountValue?: number
-    discountDescription?: string
-    terms?: string
-    minimumPurchase?: number
-    startDate: Date
-    endDate: Date
-    maxClaims?: number
-    image?: string
-    slug: string
-    status?: VoucherStatus
-  }): Promise<Voucher> {
-    const record = await this.prisma.voucher.create({
+  async create(
+    data: {
+      businessId: string
+      title: string
+      description: string
+      discountType: string
+      discountValue?: number
+      discountDescription?: string
+      terms?: string
+      minimumPurchase?: number
+      startDate: Date
+      endDate: Date
+      maxClaims?: number
+      image?: string
+      slug: string
+      status?: VoucherStatus
+    },
+    tx?: TransactionContext,
+  ): Promise<Voucher> {
+    const client = this.getClient(tx) as PrismaClient
+    const record = await client.voucher.create({
       data: {
         businessId: data.businessId,
         title: data.title,
@@ -134,15 +161,17 @@ export class PrismaVoucherRepository implements IVoucherRepository {
         status: (data.status ?? 'DRAFT') as PrismaVoucherStatus,
       },
     })
-    return toDomain(record)
+    return this.toDomain(record)
   }
 
   async updateStatus(
     id: string,
     status: VoucherStatus,
     reason?: string,
+    tx?: TransactionContext,
   ): Promise<Voucher> {
-    const record = await this.prisma.voucher.update({
+    const client = this.getClient(tx) as PrismaClient
+    const record = await client.voucher.update({
       where: { id },
       data: {
         status,
@@ -151,11 +180,12 @@ export class PrismaVoucherRepository implements IVoucherRepository {
         rejectionReason: status === 'REJECTED' ? reason : undefined,
       },
     })
-    return toDomain(record)
+    return this.toDomain(record)
   }
 
-  async incrementClaimCount(id: string): Promise<void> {
-    await this.prisma.voucher.update({
+  async incrementClaimCount(id: string, tx?: TransactionContext): Promise<void> {
+    const client = this.getClient(tx) as PrismaClient
+    await client.voucher.update({
       where: { id },
       data: { claimsCount: { increment: 1 } },
     })

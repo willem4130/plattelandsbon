@@ -13,7 +13,15 @@ export interface VoucherClaimProps {
 }
 
 export class VoucherClaim {
-  constructor(private props: VoucherClaimProps) {}
+  protected constructor(private props: VoucherClaimProps) {}
+
+  static create(props: VoucherClaimProps): VoucherClaim {
+    return new VoucherClaim(props)
+  }
+
+  static fromProps(props: VoucherClaimProps): VoucherClaim {
+    return new VoucherClaim(props)
+  }
 
   get id() {
     return this.props.id

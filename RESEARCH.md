@@ -249,76 +249,78 @@ app/ & components/ → server/routers → application/use-cases → domain/
 
 ## KEY PATTERNS
 
-### 1. Repository Pattern
+### 1. Entity Factory Pattern
+```typescript
+// Entities have protected constructors — use factories
+export class Business {
+  protected constructor(private props: BusinessProps) {}
+  static create(props: BusinessProps): Business { return new Business(props) }   // new entities
+  static fromProps(props: BusinessProps): Business { return new Business(props) } // DB reconstitution
+}
+```
+
+### 2. Repository Pattern (with transactions + pagination)
 ```typescript
 // domain/repositories/IVoucherRepository.ts — INTERFACE
 export interface IVoucherRepository {
-  findById(id: string): Promise<Voucher | null>
-  findByStatus(status: VoucherStatus): Promise<Voucher[]>
-  save(voucher: Voucher): Promise<Voucher>
-  search(query: string, filters: VoucherFilters): Promise<Voucher[]>
+  findById(id: string, tx?: TransactionContext): Promise<Voucher | null>
+  findByStatus(status: VoucherStatus, options?: PaginationOptions, tx?: TransactionContext): Promise<Voucher[]>
+  create(data: {...}, tx?: TransactionContext): Promise<Voucher>
 }
 
-// infrastructure/repositories/PrismaVoucherRepository.ts — IMPLEMENTATION
-export class PrismaVoucherRepository implements IVoucherRepository {
-  constructor(private prisma: PrismaClient) {}
-  // ... Prisma-specific implementation
+// infrastructure/repositories/ — extends BaseRepository
+export class PrismaVoucherRepository
+  extends BaseRepository<Voucher, PrismaVoucherRecord>
+  implements IVoucherRepository {
+  protected toDomain(record): Voucher { return Voucher.fromProps({...}) }
+  // Uses this.getClient(tx), this.mapOrNull(), this.mapMany()
 }
 ```
 
-### 2. Use Case Pattern
+### 3. Use Case Pattern (with IUseCase interface)
 ```typescript
-// application/use-cases/claims/ClaimVoucherUseCase.ts
-export class ClaimVoucherUseCase {
+export class ClaimVoucherUseCase implements IUseCase<ClaimInput, ClaimResponseDTO> {
   constructor(
     private voucherRepo: IVoucherRepository,
     private claimRepo: IClaimRepository,
-    private claimCodeService: ClaimCodeService,
   ) {}
-
-  async execute(input: { voucherId: string; userId: string }): Promise<ClaimResponseDTO> {
-    const voucher = await this.voucherRepo.findById(input.voucherId)
-    if (!voucher || !voucher.canBeClaimed()) throw new ClaimLimitExceededError()
-
-    const claim = VoucherClaim.create({
-      voucherId: input.voucherId,
-      userId: input.userId,
-      code: this.claimCodeService.generate(),
-    })
-
-    return ClaimMapper.toDTO(await this.claimRepo.save(claim))
-  }
+  async execute(input: ClaimInput): Promise<ClaimResponseDTO> { ... }
 }
 ```
 
-### 3. tRPC Router (Thin Layer)
+### 4. Transaction Pattern
 ```typescript
-// server/api/routers/claims.ts
+// domain/types/TransactionContext.ts — opaque type (no Prisma dependency)
+export type TransactionContext = unknown
+export interface ITransactionManager {
+  run<T>(fn: (tx: TransactionContext) => Promise<T>): Promise<T>
+}
+// Usage in use cases:
+await transactionManager.run(async (tx) => {
+  await voucherRepo.incrementClaimCount(id, tx)
+  await claimRepo.create(data, tx)
+})
+```
+
+### 5. tRPC Router (Thin Layer)
+```typescript
 export const claimsRouter = createTRPCRouter({
   claim: protectedProcedure
     .input(z.object({ voucherId: z.string() }))
     .mutation(async ({ input, ctx }) => {
-      const useCase = createClaimVoucherUseCase() // factory from container
+      const useCase = createClaimVoucherUseCase()
       return useCase.execute({ voucherId: input.voucherId, userId: ctx.session.user.id })
     }),
 })
 ```
 
-### 4. Manual Dependency Wiring (No DI Container Needed)
+### 6. Manual Dependency Wiring
 ```typescript
 // infrastructure/config/container.ts
-import { PrismaClient } from '@prisma/client'
-import { PrismaVoucherRepository } from '../repositories/PrismaVoucherRepository'
-import { ClaimVoucherUseCase } from '../../application/use-cases/claims/ClaimVoucherUseCase'
-
-const prisma = new PrismaClient()
-
-export function createClaimVoucherUseCase() {
-  return new ClaimVoucherUseCase(
-    new PrismaVoucherRepository(prisma),
-    new PrismaClaimRepository(prisma),
-    new ClaimCodeService(),
-  )
+const businessRepo = new PrismaBusinessRepository(db)
+const transactionManager = new PrismaTransactionManager(db)
+export function createRegisterBusinessUseCase() {
+  return new RegisterBusinessUseCase(businessRepo)
 }
 ```
 

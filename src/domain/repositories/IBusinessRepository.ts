@@ -1,11 +1,12 @@
 import { Business } from '../entities/Business'
 import { BusinessStatus } from '../value-objects/BusinessStatus'
+import type { TransactionContext, PaginationOptions } from '../types'
 
 export interface IBusinessRepository {
-  findById(id: string): Promise<Business | null>
-  findByUserId(userId: string): Promise<Business | null>
-  findByStatus(status: BusinessStatus): Promise<Business[]>
-  findAll(): Promise<Business[]>
+  findById(id: string, tx?: TransactionContext): Promise<Business | null>
+  findByUserId(userId: string, tx?: TransactionContext): Promise<Business | null>
+  findByStatus(status: BusinessStatus, options?: PaginationOptions, tx?: TransactionContext): Promise<Business[]>
+  findAll(options?: PaginationOptions, tx?: TransactionContext): Promise<Business[]>
   create(data: {
     userId: string
     name: string
@@ -17,10 +18,11 @@ export interface IBusinessRepository {
     phone?: string
     website?: string
     categoryIds: string[]
-  }): Promise<Business>
+  }, tx?: TransactionContext): Promise<Business>
   updateStatus(
     id: string,
     status: BusinessStatus,
     notes?: string,
+    tx?: TransactionContext,
   ): Promise<Business>
 }

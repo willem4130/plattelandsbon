@@ -15,19 +15,22 @@ Presentation (app/, components/) → Server (tRPC routers) → Application (use 
 ### Layers
 
 **Domain** (`src/domain/`) — ZERO external dependencies
-- `entities/` — Business objects with behavior (Voucher, Business, VoucherClaim)
+- `entities/` — Business objects with protected constructors + `static create()`/`fromProps()` factories
 - `value-objects/` — Immutable typed values (ClaimCode, VoucherStatus, DiscountType)
-- `repositories/` — INTERFACES only (IVoucherRepository, IClaimRepository)
+- `repositories/` — INTERFACES only (IVoucherRepository, IClaimRepository) — all methods accept optional `tx?: TransactionContext`
+- `types/` — TransactionContext (opaque), PaginationOptions, ITransactionManager
 - `services/` — Pure domain logic (VoucherValidationService, FraudDetectionService)
 - `errors/` — Domain-specific errors
 
 **Application** (`src/application/`) — Orchestrates domain, no framework deps
-- `use-cases/` — One class per operation (CreateVoucherUseCase, ClaimVoucherUseCase)
+- `interfaces/` — `IUseCase<TInput, TOutput>` generic interface
+- `use-cases/` — One class per operation, all implement `IUseCase`
 - `dtos/` — Data transfer objects for layer boundaries
 - `mappers/` — Entity <-> DTO conversions
 
 **Infrastructure** (`src/infrastructure/`) — Framework/external deps live here
-- `repositories/` — Prisma implementations of domain interfaces
+- `repositories/` — Prisma implementations extending `BaseRepository<TEntity, TPrismaRecord>`
+- `services/PrismaTransactionManager.ts` — implements `ITransactionManager` for cross-repo transactions
 - `services/ai/` — Anthropic API integration
 - `services/email/` — Resend + react-email templates
 - `services/scraping/` — Competitor scrapers (Groupon, SocialDeal, WeekendjeWeg)
@@ -43,8 +46,49 @@ Presentation (app/, components/) → Server (tRPC routers) → Application (use 
 - Next.js App Router pages — render only
 - React components — no business logic
 
+### Key Patterns
+
+**Entity creation:**
+```typescript
+// New entity (use cases/domain services):
+const business = Business.create(props)
+// Reconstitution from DB (infrastructure repos):
+const business = Business.fromProps(props)
+// Direct `new Entity()` is forbidden (protected constructor)
+```
+
+**Use case signature:**
+```typescript
+class RegisterBusinessUseCase implements IUseCase<BusinessRegistrationDTO, BusinessResponseDTO> {
+  constructor(private businessRepo: IBusinessRepository) {}
+  async execute(input: BusinessRegistrationDTO): Promise<BusinessResponseDTO> { ... }
+}
+```
+
+**Repository with transactions:**
+```typescript
+// All repo methods accept optional tx:
+findById(id: string, tx?: TransactionContext): Promise<Entity | null>
+// Transaction usage:
+await transactionManager.run(async (tx) => {
+  await voucherRepo.incrementClaimCount(voucherId, tx)
+  await claimRepo.create(claimData, tx)
+})
+```
+
+**BaseRepository (infrastructure):**
+```typescript
+class PrismaBusinessRepo extends BaseRepository<Business, PrismaRecord> implements IBusinessRepository {
+  protected toDomain(record: PrismaRecord): Business { return Business.fromProps(...) }
+  // Uses this.getClient(tx), this.mapOrNull(), this.mapMany()
+}
+```
+
 ### Rules
 - Domain layer imports NOTHING from other layers
+- Entities have protected constructors — use `create()` or `fromProps()`
+- All use cases implement `IUseCase<TInput, TOutput>`
+- All Prisma repos extend `BaseRepository` and accept `tx?: TransactionContext`
 - tRPC routers are thin: validate input, call use case, return result
 - Prisma is NEVER imported outside `src/infrastructure/`
 - Use cases depend on repository interfaces, not implementations
@@ -60,13 +104,16 @@ See `RESEARCH.md` for validated versions and configuration details.
 
 - tRPC routers → `src/server/api/routers/`, one per domain
 - Use cases → `src/application/use-cases/`, grouped by domain
+- Use case interface → `src/application/interfaces/IUseCase.ts`
 - Domain entities → `src/domain/entities/`
+- Domain types → `src/domain/types/` (TransactionContext, PaginationOptions)
 - Repository interfaces → `src/domain/repositories/`
 - Repository implementations → `src/infrastructure/repositories/`
+- Base repository → `src/infrastructure/repositories/BaseRepository.ts`
 - Components → `src/components/`, organized by feature
 - UI components → `src/components/ui/` (shadcn)
 - Shared utilities → `src/lib/`
-- Database schema → `prisma/schema/` (multi-file)
+- Database schema → `prisma/schema.prisma`
 
 ### Modularity Principles
 - Single responsibility per file
@@ -93,5 +140,5 @@ If changes require server restart:
 
 ## Project Status
 
-**Current Phase**: Week 1 foundation initialized (Nov 2025), resuming March 2026
+**Current Phase**: Week 2 — Core Models & Auth (resumed March 2026)
 **References**: `PROJECT_PLAN.md` (implementation roadmap), `RESEARCH.md` (validated stack)

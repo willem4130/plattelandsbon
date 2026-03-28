@@ -13,6 +13,9 @@ import { PrismaCategoryRepository } from '../repositories/PrismaCategoryReposito
 import { PrismaVoucherRepository } from '../repositories/PrismaVoucherRepository'
 import { PrismaClaimRepository } from '../repositories/PrismaClaimRepository'
 
+// Transaction manager
+import { PrismaTransactionManager } from '../services/PrismaTransactionManager'
+
 // Business use cases
 import { RegisterBusinessUseCase } from '@/application/use-cases/businesses/RegisterBusinessUseCase'
 import { VerifyBusinessUseCase } from '@/application/use-cases/businesses/VerifyBusinessUseCase'
@@ -27,6 +30,9 @@ const businessRepo = new PrismaBusinessRepository(db)
 const categoryRepo = new PrismaCategoryRepository(db)
 const voucherRepo = new PrismaVoucherRepository(db)
 const claimRepo = new PrismaClaimRepository(db)
+
+// Transaction manager singleton
+const transactionManager = new PrismaTransactionManager(db)
 
 // Use case factories
 export function createRegisterBusinessUseCase() {
@@ -47,6 +53,10 @@ export function createGetBusinessProfileUseCase() {
 
 export function createListCategoriesUseCase() {
   return new ListCategoriesUseCase(categoryRepo)
+}
+
+export function createTransactionManager() {
+  return transactionManager
 }
 
 // Export repos for future use case wiring

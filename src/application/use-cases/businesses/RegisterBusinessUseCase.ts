@@ -1,9 +1,12 @@
+import type { IUseCase } from '@/application/interfaces'
 import type { IBusinessRepository } from '@/domain/repositories/IBusinessRepository'
 import { BusinessAlreadyExistsError } from '@/domain/errors'
 import { BusinessMapper } from '../../mappers/BusinessMapper'
 import type { BusinessRegistrationDTO, BusinessResponseDTO } from '../../dtos/BusinessDTO'
 
-export class RegisterBusinessUseCase {
+export class RegisterBusinessUseCase
+  implements IUseCase<BusinessRegistrationDTO, BusinessResponseDTO>
+{
   constructor(private businessRepo: IBusinessRepository) {}
 
   async execute(input: BusinessRegistrationDTO): Promise<BusinessResponseDTO> {

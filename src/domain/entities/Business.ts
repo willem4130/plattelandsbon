@@ -21,7 +21,15 @@ export interface BusinessProps {
 }
 
 export class Business {
-  constructor(private props: BusinessProps) {}
+  protected constructor(private props: BusinessProps) {}
+
+  static create(props: BusinessProps): Business {
+    return new Business(props)
+  }
+
+  static fromProps(props: BusinessProps): Business {
+    return new Business(props)
+  }
 
   get id() {
     return this.props.id

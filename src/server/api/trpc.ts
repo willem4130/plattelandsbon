@@ -23,7 +23,9 @@ interface Session {
 export const createTRPCContext = async (opts: { headers: Headers }) => {
   // TODO: Replace with NextAuth session lookup
   // const session = await auth()
-  const session = await getDevSession(opts.headers)
+  const session = process.env.NODE_ENV === 'development'
+    ? await getDevSession(opts.headers)
+    : null
 
   return {
     db,

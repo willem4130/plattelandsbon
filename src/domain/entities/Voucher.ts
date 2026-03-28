@@ -26,7 +26,15 @@ export interface VoucherProps {
 }
 
 export class Voucher {
-  constructor(private props: VoucherProps) {}
+  protected constructor(private props: VoucherProps) {}
+
+  static create(props: VoucherProps): Voucher {
+    return new Voucher(props)
+  }
+
+  static fromProps(props: VoucherProps): Voucher {
+    return new Voucher(props)
+  }
 
   get id() {
     return this.props.id

@@ -3,14 +3,15 @@ import type { NextRequest } from 'next/server'
 import { appRouter } from '@/server/api/root'
 import { createTRPCContext } from '@/server/api/trpc'
 
-/**
- * Configure basic CORS headers
- */
+function getAllowedOrigin(): string {
+  if (process.env.NEXT_PUBLIC_APP_URL) return process.env.NEXT_PUBLIC_APP_URL
+  return 'http://localhost:3000'
+}
+
 const setCorsHeaders = (res: Response) => {
-  res.headers.set('Access-Control-Allow-Origin', '*')
-  res.headers.set('Access-Control-Request-Method', '*')
+  res.headers.set('Access-Control-Allow-Origin', getAllowedOrigin())
   res.headers.set('Access-Control-Allow-Methods', 'OPTIONS, GET, POST')
-  res.headers.set('Access-Control-Allow-Headers', '*')
+  res.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
   return res
 }
 
@@ -27,7 +28,7 @@ const handler = async (req: NextRequest) => {
     onError:
       process.env.NODE_ENV === 'development'
         ? ({ path, error }) => {
-            console.error(`❌ tRPC failed on ${path ?? '<no-path>'}:`, error.message)
+            console.error(`tRPC failed on ${path ?? '<no-path>'}:`, error.message)
           }
         : undefined,
   })
