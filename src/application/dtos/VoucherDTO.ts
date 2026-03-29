@@ -2,7 +2,6 @@ import type { DiscountType } from '@/domain/value-objects/DiscountType'
 import type { VoucherStatus } from '@/domain/value-objects/VoucherStatus'
 
 export interface CreateVoucherDTO {
-  businessId: string
   title: string
   description: string
   discountType: DiscountType

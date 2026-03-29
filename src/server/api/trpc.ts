@@ -79,6 +79,22 @@ export const createTRPCRouter = t.router
 export const createCallerFactory = t.createCallerFactory
 
 /**
+ * Rate limiting middleware — applied to mutation procedures
+ */
+const rateLimitMiddleware = t.middleware(async ({ ctx, next }) => {
+  // Dynamic import to avoid breaking if Redis not configured
+  const { strictRatelimit } = await import('@/lib/rate-limit')
+  if (strictRatelimit) {
+    const identifier = ctx.session?.user?.id ?? ctx.headers.get('x-forwarded-for') ?? 'anonymous'
+    const { success } = await strictRatelimit.limit(identifier)
+    if (!success) {
+      throw new TRPCError({ code: 'TOO_MANY_REQUESTS', message: 'Rate limit exceeded. Try again later.' })
+    }
+  }
+  return next()
+})
+
+/**
  * Public procedure — no auth required
  */
 export const publicProcedure = t.procedure
@@ -130,3 +146,13 @@ export const businessProcedure = t.procedure.use(({ ctx, next }) => {
     },
   })
 })
+
+/**
+ * Rate-limited business procedure — for mutations (create, submit)
+ */
+export const rateLimitedBusinessProcedure = businessProcedure.use(rateLimitMiddleware)
+
+/**
+ * Rate-limited protected procedure — for sensitive mutations
+ */
+export const rateLimitedProtectedProcedure = protectedProcedure.use(rateLimitMiddleware)

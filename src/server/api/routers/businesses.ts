@@ -1,5 +1,4 @@
 import { z } from 'zod'
-import { TRPCError } from '@trpc/server'
 import {
   createTRPCRouter,
   publicProcedure,
@@ -12,7 +11,7 @@ import {
   createListBusinessesUseCase,
   createGetBusinessProfileUseCase,
 } from '@/infrastructure/config/container'
-import { DomainError } from '@/domain/errors'
+import { mapDomainError } from '@/server/api/helpers/mapDomainError'
 
 export const businessesRouter = createTRPCRouter({
   register: protectedProcedure
@@ -37,10 +36,7 @@ export const businessesRouter = createTRPCRouter({
           ...input,
         })
       } catch (error) {
-        if (error instanceof DomainError) {
-          throw new TRPCError({ code: 'BAD_REQUEST', message: error.message })
-        }
-        throw error
+        mapDomainError(error)
       }
     }),
 
@@ -57,10 +53,7 @@ export const businessesRouter = createTRPCRouter({
         const useCase = createVerifyBusinessUseCase()
         return await useCase.execute(input)
       } catch (error) {
-        if (error instanceof DomainError) {
-          throw new TRPCError({ code: 'BAD_REQUEST', message: error.message })
-        }
-        throw error
+        mapDomainError(error)
       }
     }),
 
@@ -87,10 +80,7 @@ export const businessesRouter = createTRPCRouter({
         const useCase = createGetBusinessProfileUseCase()
         return await useCase.execute({ by: 'id', id: input.id })
       } catch (error) {
-        if (error instanceof DomainError) {
-          throw new TRPCError({ code: 'NOT_FOUND', message: error.message })
-        }
-        throw error
+        mapDomainError(error)
       }
     }),
 })
