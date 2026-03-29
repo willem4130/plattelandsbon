@@ -15,9 +15,9 @@ export default function PublicLayout({
             <span className="text-xl font-bold">Oom Gerrit</span>
           </Link>
           <div className="flex items-center gap-6 text-sm text-muted-foreground">
-            <Link href="/vouchers" className="hover:text-foreground transition-colors">Bonnen</Link>
+            <Link href="/bonnen" className="hover:text-foreground transition-colors">Bonnen</Link>
             <Link href="/about" className="hover:text-foreground transition-colors">Over ons</Link>
-            <Link href="/business/register" className="hover:text-foreground transition-colors">Voor ondernemers</Link>
+            <Link href="/register/business" className="hover:text-foreground transition-colors">Voor ondernemers</Link>
           </div>
         </div>
       </nav>

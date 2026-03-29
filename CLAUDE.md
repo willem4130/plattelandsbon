@@ -176,6 +176,64 @@ If changes require server restart:
 
 **Images**: Unsplash (free commercial license), stored in `public/images/`
 
+## Local Development
+
+### Prerequisites
+- Docker Desktop running
+- Node.js 20.9+
+
+### First-time setup
+```bash
+npm install
+npm run db:up              # start PostgreSQL in Docker
+npm run db:migrate         # create tables
+npm run db:seed            # populate test data
+npm run dev                # start Next.js (localhost:3000)
+```
+
+### Daily development
+```bash
+npm run db:up              # start DB (if not already running)
+npm run dev                # start app
+```
+
+### Useful commands
+```bash
+npm run db:studio          # browse data at localhost:5555
+npm run db:reset           # nuke DB, re-migrate, re-seed
+npm run db:down            # stop PostgreSQL container
+docker compose down -v     # stop + delete all data (fresh start)
+```
+
+## Database Management — Local vs Production
+
+Local (Docker) and production (Neon) are **completely separate**. Never cross them.
+
+### Schema changes (migrations)
+```
+Local:  edit schema.prisma → npm run db:migrate → creates migration file → commit to git
+                                                                               ↓
+Production:  deploy to Vercel → build runs prisma migrate deploy → applies migration
+```
+
+### Rules
+- **Never run `prisma migrate dev` against production** — it can reset data
+- **Never seed production** — `db:seed` is for test data only
+- **Migration files are the bridge** — created locally, applied in production via `prisma migrate deploy`
+- `.env` has local `DATABASE_URL` (localhost), Vercel env vars have Neon URL — they never cross
+- The `build` script runs `prisma generate && prisma migrate deploy && next build` so Vercel auto-applies migrations on deploy
+- Local data is disposable — reset freely with `npm run db:reset`
+- Production data is sacred — only modified by the app or explicit migrations
+
+### Environment separation
+| | Local | Production |
+|---|---|---|
+| Database | Docker PostgreSQL 17 | Neon (EU Frankfurt) |
+| DATABASE_URL | `postgresql://postgres:postgres@localhost:5432/oomgerrit` | Set in Vercel env vars |
+| Migrations | `prisma migrate dev` (creates files) | `prisma migrate deploy` (applies files) |
+| Seed data | `npm run db:seed` (test data) | Never — real user data only |
+| Reset | `npm run db:reset` (safe, local only) | Never |
+
 ## Seed Data
 
 Realistic Achterhoek businesses in `prisma/seed-data/achterhoek.ts`:
@@ -198,9 +256,39 @@ NextAuth is NOT wired yet. Dev auth bypass in `src/server/api/trpc.ts`:
 - **Region**: Achterhoek (Gelderland), not generic "platteland"
 - **Tone**: Warm, gezellig, "je/jij" — never corporate
 
+## Deployment Pipeline
+
+**GitHub → Vercel auto-deploy**. No CI/CD config files — Vercel's GitHub integration handles it.
+
+```
+git push origin main → Vercel detects push → runs `npm run build` → deploys to production
+                                                    ↓
+                                    prisma generate → prisma migrate deploy → next build
+```
+
+- **Production URL**: https://plattelandsbon.vercel.app
+- **Preview deploys**: Every PR/branch push gets a preview URL (`plattelandsbon-<hash>-willem4130s-projects.vercel.app`)
+- **Build command**: `npm run build` (= `prisma generate && prisma migrate deploy && next build`)
+- **Node.js**: 24.x (set in Vercel project settings)
+- **Region**: iad1 (US East) for serverless functions
+- **Database**: Neon Postgres (EU Frankfurt) — connection strings in Vercel env vars
+- **`.vercelignore`**: Excludes `.env`, `.env.*`, `debug/`
+
+### Deploy checklist
+1. Run `npm run lint && npm run typecheck` locally
+2. Commit and push to `main`
+3. Vercel auto-deploys — check build logs in Vercel dashboard if needed
+
+### Vercel env vars (production)
+Managed in Vercel dashboard — never in code. Key vars:
+- `DATABASE_URL` / `DIRECT_URL` — Neon connection strings
+- `NEXTAUTH_SECRET` — Auth secret
+- `EMAIL_FROM` — Resend sender address
+
 ## Project Status
 
 **GitHub**: https://github.com/willem4130/plattelandsbon
-**Deployment**: Vercel (https://oomgerrit.vercel.app) + Neon Postgres (EU Frankfurt)
+**Vercel project**: `plattelandsbon` (owner: willem4130s-projects)
+**Production**: https://plattelandsbon.vercel.app
 **Current Phase**: Week 3 complete, landing page + detail pages done (March 2026)
 **References**: `PROJECT_PLAN.md` (implementation roadmap), `RESEARCH.md` (validated stack)

@@ -9,7 +9,7 @@ import { Toaster } from '@/components/ui/sonner'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Oom Gerrit | Ontdek het beste van de Achterhoek',
+  title: 'Plattelandsbon — Oom Gerrit',
   description: 'Gratis kortingsbonnen voor restaurants, cafés, wellness, overnachtingen en activiteiten in de Achterhoek. Van Winterswijk tot Zutphen — Oom Gerrit kent de beste plekjes.',
 }
 

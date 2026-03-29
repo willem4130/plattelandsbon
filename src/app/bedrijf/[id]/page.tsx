@@ -42,7 +42,7 @@ export default function BusinessDetailPage({ params }: { params: Promise<{ id: s
       {/* Header */}
       <nav className="glass sticky top-0 z-50 border-b border-gray-200/50">
         <div className="container mx-auto flex h-14 items-center gap-4 px-4">
-          <Link href="/#bedrijven" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <Link href="/bedrijven" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft className="h-4 w-4" />
             Alle bedrijven
           </Link>
