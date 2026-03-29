@@ -238,25 +238,27 @@ export default function Home() {
             const catSlug = v.categories[0] ?? 'restaurants'
             const meta = categoryMeta[catSlug] ?? categoryMeta['restaurants']!
             return (
-              <div key={v.id} className="glass group overflow-hidden rounded-2xl transition-shadow duration-300 hover:shadow-2xl hover:scale-[1.02] transition-transform">
-                <div className={`h-1.5 bg-gradient-to-r ${meta.gradient}`} />
-                <div className="p-5">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold leading-tight">{v.title}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">{v.businessName}</p>
+              <Link key={v.id} href={`/bon/${v.id}`}>
+                <div className="glass group cursor-pointer overflow-hidden rounded-2xl transition-shadow duration-300 hover:shadow-2xl hover:scale-[1.02] transition-transform">
+                  <div className={`h-1.5 bg-gradient-to-r ${meta.gradient}`} />
+                  <div className="p-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold leading-tight">{v.title}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">{v.businessName}</p>
+                      </div>
+                      <div className={`shrink-0 rounded-lg bg-gradient-to-br ${meta.gradient} px-2.5 py-1.5 text-center shadow-md`}>
+                        <span className="block text-sm font-bold leading-none text-white">{label.text}</span>
+                        <span className="block text-[9px] font-medium uppercase tracking-wide text-white/80">{label.sub}</span>
+                      </div>
                     </div>
-                    <div className={`shrink-0 rounded-lg bg-gradient-to-br ${meta.gradient} px-2.5 py-1.5 text-center shadow-md`}>
-                      <span className="block text-sm font-bold leading-none text-white">{label.text}</span>
-                      <span className="block text-[9px] font-medium uppercase tracking-wide text-white/80">{label.sub}</span>
+                    <div className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <MapPin className="h-3 w-3" />
+                      {v.city}
                     </div>
-                  </div>
-                  <div className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <MapPin className="h-3 w-3" />
-                    {v.city}
                   </div>
                 </div>
-              </div>
+              </Link>
             )
           })}
         </div>
@@ -274,29 +276,31 @@ export default function Home() {
             const meta = categoryMeta[catSlug] ?? categoryMeta['restaurants']!
             const Icon = meta.icon
             return (
-              <div key={b.id} className="glossy-card group hover:scale-[1.02] transition-transform">
-                <div className="flex items-start gap-3">
-                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${meta.gradient}`}>
-                    <Icon className="h-5 w-5 text-white" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold">{b.name}</p>
-                    <div className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
-                      <MapPin className="h-3 w-3" />
-                      {b.city}
+              <Link key={b.id} href={`/bedrijf/${b.id}`}>
+                <div className="glossy-card group cursor-pointer hover:scale-[1.02] transition-transform">
+                  <div className="flex items-start gap-3">
+                    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${meta.gradient}`}>
+                      <Icon className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold">{b.name}</p>
+                      <div className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
+                        <MapPin className="h-3 w-3" />
+                        {b.city}
+                      </div>
                     </div>
                   </div>
-                </div>
-                <p className="mt-3 line-clamp-2 text-xs leading-relaxed text-muted-foreground">{b.description}</p>
-                <div className="mt-3 flex items-center justify-between">
-                  <div className="flex flex-wrap gap-1">
-                    {b.categoryNames.map((name: string) => (
-                      <span key={name} className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">{name}</span>
-                    ))}
+                  <p className="mt-3 line-clamp-2 text-xs leading-relaxed text-muted-foreground">{b.description}</p>
+                  <div className="mt-3 flex items-center justify-between">
+                    <div className="flex flex-wrap gap-1">
+                      {b.categoryNames.map((name: string) => (
+                        <span key={name} className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">{name}</span>
+                      ))}
+                    </div>
+                    <span className="text-xs font-medium text-primary">{b.activeVoucherCount} bonnen</span>
                   </div>
-                  <span className="text-xs font-medium text-primary">{b.activeVoucherCount} bonnen</span>
                 </div>
-              </div>
+              </Link>
             )
           })}
         </div>

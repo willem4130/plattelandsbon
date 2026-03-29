@@ -151,14 +151,36 @@ export const vouchersRouter = createTRPCRouter({
     }))
   }),
 
-  // Public: get voucher by ID
+  // Public: get voucher by ID with business info
   getById: publicProcedure
     .input(z.object({ id: z.string() }))
-    .query(async ({ input }) => {
-      const voucher = await voucherRepo.findById(input.id)
-      if (!voucher) {
+    .query(async ({ ctx, input }) => {
+      const v = await ctx.db.voucher.findUnique({
+        where: { id: input.id },
+        include: { business: { select: { id: true, name: true, city: true } } },
+      })
+      if (!v) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Voucher not found' })
       }
-      return VoucherMapper.toDTO(voucher)
+      return {
+        id: v.id,
+        title: v.title,
+        description: v.description,
+        discountType: v.discountType,
+        discountValue: v.discountValue,
+        discountDescription: v.discountDescription,
+        terms: v.terms,
+        minimumPurchase: v.minimumPurchase,
+        slug: v.slug,
+        status: v.status,
+        startDate: v.startDate,
+        endDate: v.endDate,
+        maxClaims: v.maxClaims,
+        claimsCount: v.claimsCount,
+        remainingClaims: v.maxClaims ? v.maxClaims - v.claimsCount : null,
+        businessId: v.business.id,
+        businessName: v.business.name,
+        city: v.business.city,
+      }
     }),
 })
