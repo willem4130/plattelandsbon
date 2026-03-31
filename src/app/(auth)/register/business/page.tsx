@@ -20,7 +20,7 @@ export default function RegisterBusinessPage() {
   const registerMutation = api.businesses.register.useMutation({
     onSuccess: () => {
       toast.success('Bedrijf geregistreerd! Wacht op verificatie door de admin.')
-      router.push('/business/dashboard')
+      router.push('/business/vouchers')
     },
     onError: (error) => {
       toast.error(error.message)

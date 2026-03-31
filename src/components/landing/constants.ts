@@ -36,5 +36,6 @@ export function getDiscountLabel(v: { discountType: string; discountValue: numbe
 export const navLinks = [
   { href: '/bonnen', label: 'Alle bonnen' },
   { href: '/bedrijven', label: 'Bedrijven' },
+  { href: '/voor-ondernemers', label: 'Voor ondernemers' },
   { href: '/admin/businesses', label: 'Admin' },
 ]

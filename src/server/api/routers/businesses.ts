@@ -10,6 +10,7 @@ import {
   createVerifyBusinessUseCase,
   createListBusinessesUseCase,
   createGetBusinessProfileUseCase,
+  createListVerifiedBusinessesUseCase,
 } from '@/infrastructure/config/container'
 import { mapDomainError } from '@/server/api/helpers/mapDomainError'
 
@@ -64,37 +65,31 @@ export const businessesRouter = createTRPCRouter({
       }).optional(),
     )
     .query(async ({ input }) => {
-      const useCase = createListBusinessesUseCase()
-      return await useCase.execute(input?.status)
+      try {
+        const useCase = createListBusinessesUseCase()
+        return await useCase.execute(input?.status)
+      } catch (error) {
+        mapDomainError(error)
+      }
     }),
 
   getMyBusiness: protectedProcedure.query(async ({ ctx }) => {
-    const useCase = createGetBusinessProfileUseCase()
-    return await useCase.execute({ by: 'userId', userId: ctx.session.user.id })
+    try {
+      const useCase = createGetBusinessProfileUseCase()
+      return await useCase.execute({ by: 'userId', userId: ctx.session.user.id })
+    } catch (error) {
+      mapDomainError(error)
+    }
   }),
 
   // Public: list all verified businesses with categories
-  listVerified: publicProcedure.query(async ({ ctx }) => {
-    const businesses = await ctx.db.business.findMany({
-      where: { status: 'VERIFIED' },
-      include: {
-        businessCategories: { include: { category: true } },
-        _count: { select: { vouchers: { where: { status: 'ACTIVE' } } } },
-      },
-      orderBy: { name: 'asc' },
-    })
-    return businesses.map((b) => ({
-      id: b.id,
-      name: b.name,
-      description: b.description,
-      city: b.city,
-      province: b.province,
-      phone: b.phone,
-      website: b.website,
-      categories: b.businessCategories.map((bc) => bc.category.slug),
-      categoryNames: b.businessCategories.map((bc) => bc.category.name),
-      activeVoucherCount: b._count.vouchers,
-    }))
+  listVerified: publicProcedure.query(async () => {
+    try {
+      const useCase = createListVerifiedBusinessesUseCase()
+      return await useCase.execute()
+    } catch (error) {
+      mapDomainError(error)
+    }
   }),
 
   getById: publicProcedure

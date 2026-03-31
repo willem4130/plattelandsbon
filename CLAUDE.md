@@ -97,7 +97,7 @@ class PrismaBusinessRepo extends BaseRepository<Business, PrismaRecord> implemen
 
 ## Tech Stack
 
-Next.js 16, React 19, TypeScript 5.9, PostgreSQL, Prisma 6, NextAuth v5, tRPC v11, Tailwind CSS 4, shadcn/ui, GSAP + @gsap/react (scroll animations), Anthropic AI SDK, Resend, Vercel Blob, Upstash Redis
+Next.js 16, React 19, TypeScript 5.9, PostgreSQL, Prisma 6, NextAuth v5, tRPC v11, Tailwind CSS 4, shadcn/ui, GSAP + @gsap/react (hero scroll animations), Anthropic AI SDK, Resend, Vercel Blob, Upstash Redis
 
 See `RESEARCH.md` for validated versions and configuration details.
 
@@ -120,11 +120,50 @@ See `RESEARCH.md` for validated versions and configuration details.
 - Seed data → `prisma/seed-data/achterhoek.ts`
 - Database schema → `prisma/schema.prisma`
 
+### Landing Page Components
+
+Modular components in `src/components/landing/`:
+- `navbar.tsx` — Sticky nav + mobile menu (uses navLinks from constants)
+- `hero-section.tsx` — GSAP-animated hero (self-contained useRef + useGSAP)
+- `how-it-works.tsx` — 3-step journey timeline with connecting lines
+- `featured-vouchers.tsx` — Voucher carousel (CSS scroll-snap) with category filters
+- `featured-businesses.tsx` — Business carousel (CSS scroll-snap) with category filters
+- `landing-data.tsx` — Client component wrapper for data-dependent sections (uses useQuery, data pre-hydrated from server)
+- `all-vouchers.tsx` — Full voucher grid (used on /bonnen page)
+- `business-cta.tsx` — Entrepreneur call-to-action section
+- `footer.tsx` — Footer with nav links
+- `voucher-card.tsx` — Reusable voucher card (carousel + grid)
+- `business-card.tsx` — Reusable business card (carousel + grid)
+- `constants.ts` — Shared categoryMeta, navLinks, getDiscountLabel
+- `types.ts` — VoucherItem, BusinessItem (inferred from tRPC router output)
+
+### Intercepting Routes (Modal System)
+
+Clicking a voucher/business card opens a modal overlay instead of navigating away. Uses Next.js parallel routes + intercepting routes:
+- `src/app/@modal/default.tsx` — null default for parallel route slot
+- `src/app/@modal/(.)bon/[id]/page.tsx` — intercepts `/bon/[id]`, renders modal
+- `src/app/@modal/(.)bedrijf/[id]/page.tsx` — intercepts `/bedrijf/[id]`, renders modal
+- `src/components/modal/route-modal.tsx` — Reusable modal shell (Radix Dialog, prev/next arrows, keyboard navigation)
+- `src/components/modal/voucher-modal-content.tsx` — Voucher detail in modal (uses placeholderData from list cache for instant render)
+- `src/components/modal/business-modal-content.tsx` — Business detail in modal
+
+Direct visits to `/bon/[id]` or `/bedrijf/[id]` render the full page (SEO, sharing).
+
+### Server-Side Prefetching
+
+Landing page (`src/app/page.tsx`) is a Server Component that prefetches tRPC data:
+- Uses `createHydrationHelpers` from `@trpc/react-query/rsc` (configured in `src/trpc/server.ts`)
+- Exports `trpc` (with `.prefetch()`) and `HydrateClient` wrapper
+- Client components get pre-hydrated data — no loading flash on first render
+
 ### Page Routes
 
-- `/` — Landing page (all vouchers, businesses, category filters)
-- `/bon/[id]` — Voucher detail page (description, terms, claim CTA)
-- `/bedrijf/[id]` — Business detail page (info, contact, their vouchers)
+- `/` — Landing page (hero, how it works, featured carousels, business CTA)
+- `/bonnen` — All vouchers with category filters
+- `/bedrijven` — All businesses with category + city filters
+- `/voor-ondernemers` — Business info/landing page (benefits, how it works, naoberschap)
+- `/bon/[id]` — Voucher detail page (full page for direct visits + claim flow)
+- `/bedrijf/[id]` — Business detail page (full page for direct visits)
 - `/register/business` — Business registration form
 - `/business/vouchers` — Business voucher management
 - `/business/vouchers/create` — Create voucher form
@@ -166,8 +205,10 @@ If changes require server restart:
 - `.glossy-card` — Glass card with hover shadow transition
 - `.glossy-btn` — Gradient white button with shadow
 
+**Carousels** use native CSS scroll-snap (`overflow-x-auto snap-x snap-mandatory`). No JS carousel library — browser handles scroll, swipe, trackpad natively. Arrow buttons call `scrollBy()`.
+
 **Animations** (GSAP + ScrollTrigger):
-- Landing page uses `useGSAP` hook with `gsap.fromTo()` + `autoAlpha` for scroll reveals
+- Hero section uses `useGSAP` hook with `gsap.fromTo()` + `autoAlpha` for scroll reveals
 - Hero image reveal triggered via `onLoad` callback (waits for image to load)
 - Guard `gsap.registerPlugin()` with `typeof window !== 'undefined'` for SSR
 - Use `data-*` attributes for animation targets (not CSS classes — avoids conflicts)
@@ -252,6 +293,8 @@ NextAuth is NOT wired yet. Dev auth bypass in `src/server/api/trpc.ts`:
 
 ## Branding
 
+- **Product name**: Plattelandsbon (used in navbar, tab title, favicon)
+- **Parent brand**: Oom Gerrit
 - **Tagline**: "De beste tips van 't platteland"
 - **Region**: Achterhoek (Gelderland), not generic "platteland"
 - **Tone**: Warm, gezellig, "je/jij" — never corporate

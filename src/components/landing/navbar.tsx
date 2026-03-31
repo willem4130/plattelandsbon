@@ -33,7 +33,7 @@ export function Navbar() {
           </div>
 
           <div className="hidden items-center gap-3 md:flex">
-            <Link href="/register/business">
+            <Link href="/voor-ondernemers">
               <Button variant="ghost" size="sm">Ondernemer? Meld je aan</Button>
             </Link>
             <Link href="/business/vouchers">

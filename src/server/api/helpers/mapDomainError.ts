@@ -3,9 +3,13 @@ import {
   DomainError,
   BusinessNotFoundError,
   VoucherNotFoundError,
+  UserNotFoundError,
   BusinessNotVerifiedError,
   BusinessCannotBeVerifiedError,
   BusinessAlreadyExistsError,
+  ClaimLimitExceededError,
+  VoucherNotClaimableError,
+  InvalidRedemptionError,
 } from '@/domain/errors'
 
 export function mapDomainError(error: unknown): never {
@@ -13,7 +17,8 @@ export function mapDomainError(error: unknown): never {
 
   if (
     error instanceof BusinessNotFoundError ||
-    error instanceof VoucherNotFoundError
+    error instanceof VoucherNotFoundError ||
+    error instanceof UserNotFoundError
   ) {
     throw new TRPCError({ code: 'NOT_FOUND', message: error.message })
   }
@@ -26,8 +31,16 @@ export function mapDomainError(error: unknown): never {
     throw new TRPCError({ code: 'CONFLICT', message: error.message })
   }
 
-  if (error instanceof BusinessCannotBeVerifiedError) {
+  if (
+    error instanceof BusinessCannotBeVerifiedError ||
+    error instanceof ClaimLimitExceededError ||
+    error instanceof VoucherNotClaimableError
+  ) {
     throw new TRPCError({ code: 'PRECONDITION_FAILED', message: error.message })
+  }
+
+  if (error instanceof InvalidRedemptionError) {
+    throw new TRPCError({ code: 'BAD_REQUEST', message: error.message })
   }
 
   // Default: domain validation / business rule errors

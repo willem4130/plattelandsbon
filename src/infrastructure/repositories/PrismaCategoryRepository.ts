@@ -24,7 +24,7 @@ export class PrismaCategoryRepository
   }
 
   async findAll(tx?: TransactionContext): Promise<Category[]> {
-    const client = this.getClient(tx) as PrismaClient
+    const client = this.getClient(tx)
     const records = await client.category.findMany({
       orderBy: { sortOrder: 'asc' },
     })
@@ -32,13 +32,13 @@ export class PrismaCategoryRepository
   }
 
   async findById(id: string, tx?: TransactionContext): Promise<Category | null> {
-    const client = this.getClient(tx) as PrismaClient
+    const client = this.getClient(tx)
     const record = await client.category.findUnique({ where: { id } })
     return this.mapOrNull(record)
   }
 
   async findBySlug(slug: string, tx?: TransactionContext): Promise<Category | null> {
-    const client = this.getClient(tx) as PrismaClient
+    const client = this.getClient(tx)
     const record = await client.category.findUnique({ where: { slug } })
     return this.mapOrNull(record)
   }

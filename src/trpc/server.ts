@@ -1,9 +1,11 @@
 import 'server-only'
 import { createTRPCContext } from '@/server/api/trpc'
-import { appRouter } from '@/server/api/root'
+import { appRouter, type AppRouter } from '@/server/api/root'
 import { createCallerFactory } from '@/server/api/trpc'
+import { createHydrationHelpers } from '@trpc/react-query/rsc'
 import { headers } from 'next/headers'
 import { cache } from 'react'
+import { QueryClient } from '@tanstack/react-query'
 
 /**
  * This wraps the `createTRPCContext` helper and provides the required context for the tRPC API when
@@ -19,3 +21,10 @@ const createContext = cache(async () => {
 const createCaller = createCallerFactory(appRouter)
 
 export const api = createCaller(createContext)
+
+const getQueryClient = cache(() => new QueryClient())
+
+export const { trpc, HydrateClient } = createHydrationHelpers<AppRouter>(
+  api,
+  getQueryClient,
+)

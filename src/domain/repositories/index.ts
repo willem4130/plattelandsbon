@@ -1,5 +1,6 @@
 export type { IBusinessRepository } from './IBusinessRepository'
 export type { ICategoryRepository } from './ICategoryRepository'
 export type { IClaimRepository } from './IClaimRepository'
+export type { IUserRepository, UserSearchFilters } from './IUserRepository'
 export type { IVoucherRepository, VoucherSearchFilters } from './IVoucherRepository'
 export type { TransactionContext, PaginationOptions, ITransactionManager } from '../types'

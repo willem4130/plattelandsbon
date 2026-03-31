@@ -1,8 +1,12 @@
 import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import { createTRPCRouter, publicProcedure } from '@/server/api/trpc'
-import { createClaimVoucherUseCase } from '@/infrastructure/config/container'
-import { claimRepo } from '@/infrastructure/config/container'
+import {
+  createFindOrCreateConsumerUseCase,
+  createClaimVoucherUseCase,
+  createGetClaimByCodeUseCase,
+} from '@/infrastructure/config/container'
+import { mapDomainError } from '@/server/api/helpers/mapDomainError'
 
 export const claimsRouter = createTRPCRouter({
   // Claim a voucher — lightweight: just needs an email (finds or creates user)
@@ -11,30 +15,18 @@ export const claimsRouter = createTRPCRouter({
       voucherId: z.string(),
       email: z.string().email(),
     }))
-    .mutation(async ({ ctx, input }) => {
-      // Find or create user by email
-      let user = await ctx.db.user.findUnique({ where: { email: input.email } })
-      if (!user) {
-        user = await ctx.db.user.create({
-          data: {
-            email: input.email,
-            name: input.email.split('@')[0] ?? 'Bezoeker',
-            role: 'CONSUMER',
-          },
-        })
-      }
-
+    .mutation(async ({ input }) => {
       try {
-        const useCase = createClaimVoucherUseCase()
-        return await useCase.execute({
+        const findOrCreateUser = createFindOrCreateConsumerUseCase()
+        const user = await findOrCreateUser.execute({ email: input.email })
+
+        const claimUseCase = createClaimVoucherUseCase()
+        return await claimUseCase.execute({
           voucherId: input.voucherId,
           userId: user.id,
         })
       } catch (error) {
-        if (error instanceof Error) {
-          throw new TRPCError({ code: 'BAD_REQUEST', message: error.message })
-        }
-        throw error
+        mapDomainError(error)
       }
     }),
 
@@ -42,18 +34,16 @@ export const claimsRouter = createTRPCRouter({
   getByCode: publicProcedure
     .input(z.object({ code: z.string().min(1) }))
     .query(async ({ input }) => {
-      const claim = await claimRepo.findByClaimCode(input.code)
-      if (!claim) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Code niet gevonden' })
-      }
-      return {
-        id: claim.id,
-        claimCode: claim.claimCode,
-        status: claim.status,
-        claimedAt: claim.claimedAt,
-        expiresAt: claim.expiresAt,
-        isRedeemable: claim.isRedeemable(),
-        isExpired: claim.isExpired(),
+      try {
+        const useCase = createGetClaimByCodeUseCase()
+        const claim = await useCase.execute(input.code)
+        if (!claim) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Code niet gevonden' })
+        }
+        return claim
+      } catch (error) {
+        if (error instanceof TRPCError) throw error
+        mapDomainError(error)
       }
     }),
 })

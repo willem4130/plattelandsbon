@@ -15,7 +15,7 @@ export function Footer() {
         <nav className="flex gap-6 text-xs text-muted-foreground">
           <Link href="/bonnen" className="hover:text-foreground transition-colors">Bonnen</Link>
           <Link href="/bedrijven" className="hover:text-foreground transition-colors">Bedrijven</Link>
-          <Link href="/register/business" className="hover:text-foreground transition-colors">Voor ondernemers</Link>
+          <Link href="/voor-ondernemers" className="hover:text-foreground transition-colors">Voor ondernemers</Link>
           <Link href="/admin/businesses" className="hover:text-foreground transition-colors">Admin</Link>
         </nav>
         <p className="text-xs text-muted-foreground">&copy; 2026 Oom Gerrit</p>

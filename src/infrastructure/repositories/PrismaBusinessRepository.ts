@@ -42,7 +42,7 @@ export class PrismaBusinessRepository
   }
 
   async findById(id: string, tx?: TransactionContext): Promise<Business | null> {
-    const client = this.getClient(tx) as PrismaClient
+    const client = this.getClient(tx)
     const record = await client.business.findUnique({
       where: { id },
       include: includeCategories,
@@ -51,7 +51,7 @@ export class PrismaBusinessRepository
   }
 
   async findByUserId(userId: string, tx?: TransactionContext): Promise<Business | null> {
-    const client = this.getClient(tx) as PrismaClient
+    const client = this.getClient(tx)
     const record = await client.business.findUnique({
       where: { userId },
       include: includeCategories,
@@ -64,7 +64,7 @@ export class PrismaBusinessRepository
     options?: PaginationOptions,
     tx?: TransactionContext,
   ): Promise<Business[]> {
-    const client = this.getClient(tx) as PrismaClient
+    const client = this.getClient(tx)
     const records = await client.business.findMany({
       where: { status },
       include: includeCategories,
@@ -76,7 +76,7 @@ export class PrismaBusinessRepository
   }
 
   async findAll(options?: PaginationOptions, tx?: TransactionContext): Promise<Business[]> {
-    const client = this.getClient(tx) as PrismaClient
+    const client = this.getClient(tx)
     const records = await client.business.findMany({
       include: includeCategories,
       orderBy: { createdAt: 'desc' },
@@ -101,7 +101,7 @@ export class PrismaBusinessRepository
     },
     tx?: TransactionContext,
   ): Promise<Business> {
-    const client = this.getClient(tx) as PrismaClient
+    const client = this.getClient(tx)
     const { categoryIds, ...businessData } = data
     const record = await client.business.create({
       data: {
@@ -115,13 +115,22 @@ export class PrismaBusinessRepository
     return this.toDomain(record)
   }
 
+  async findByIds(ids: string[], tx?: TransactionContext): Promise<Business[]> {
+    const client = this.getClient(tx)
+    const records = await client.business.findMany({
+      where: { id: { in: ids } },
+      include: includeCategories,
+    })
+    return this.mapMany(records)
+  }
+
   async updateStatus(
     id: string,
     status: BusinessStatus,
     notes?: string,
     tx?: TransactionContext,
   ): Promise<Business> {
-    const client = this.getClient(tx) as PrismaClient
+    const client = this.getClient(tx)
     const record = await client.business.update({
       where: { id },
       data: {

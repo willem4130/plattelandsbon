@@ -45,13 +45,13 @@ export class PrismaVoucherRepository
   }
 
   async findById(id: string, tx?: TransactionContext): Promise<Voucher | null> {
-    const client = this.getClient(tx) as PrismaClient
+    const client = this.getClient(tx)
     const record = await client.voucher.findUnique({ where: { id } })
     return this.mapOrNull(record)
   }
 
   async findBySlug(slug: string, tx?: TransactionContext): Promise<Voucher | null> {
-    const client = this.getClient(tx) as PrismaClient
+    const client = this.getClient(tx)
     const record = await client.voucher.findUnique({ where: { slug } })
     return this.mapOrNull(record)
   }
@@ -61,7 +61,7 @@ export class PrismaVoucherRepository
     options?: PaginationOptions,
     tx?: TransactionContext,
   ): Promise<Voucher[]> {
-    const client = this.getClient(tx) as PrismaClient
+    const client = this.getClient(tx)
     const records = await client.voucher.findMany({
       where: { businessId },
       orderBy: { createdAt: 'desc' },
@@ -76,7 +76,7 @@ export class PrismaVoucherRepository
     options?: PaginationOptions,
     tx?: TransactionContext,
   ): Promise<Voucher[]> {
-    const client = this.getClient(tx) as PrismaClient
+    const client = this.getClient(tx)
     const records = await client.voucher.findMany({
       where: { status },
       orderBy: { createdAt: 'desc' },
@@ -90,7 +90,7 @@ export class PrismaVoucherRepository
     filters: VoucherSearchFilters,
     tx?: TransactionContext,
   ): Promise<{ vouchers: Voucher[]; total: number }> {
-    const client = this.getClient(tx) as PrismaClient
+    const client = this.getClient(tx)
     const where: Prisma.VoucherWhereInput = {
       status: filters.status ?? 'ACTIVE',
     }
@@ -128,7 +128,7 @@ export class PrismaVoucherRepository
       businessId: string
       title: string
       description: string
-      discountType: string
+      discountType: DiscountType
       discountValue?: number
       discountDescription?: string
       terms?: string
@@ -142,7 +142,7 @@ export class PrismaVoucherRepository
     },
     tx?: TransactionContext,
   ): Promise<Voucher> {
-    const client = this.getClient(tx) as PrismaClient
+    const client = this.getClient(tx)
     const record = await client.voucher.create({
       data: {
         businessId: data.businessId,
@@ -170,7 +170,7 @@ export class PrismaVoucherRepository
     reason?: string,
     tx?: TransactionContext,
   ): Promise<Voucher> {
-    const client = this.getClient(tx) as PrismaClient
+    const client = this.getClient(tx)
     const record = await client.voucher.update({
       where: { id },
       data: {
@@ -184,10 +184,23 @@ export class PrismaVoucherRepository
   }
 
   async incrementClaimCount(id: string, tx?: TransactionContext): Promise<void> {
-    const client = this.getClient(tx) as PrismaClient
+    const client = this.getClient(tx)
     await client.voucher.update({
       where: { id },
       data: { claimsCount: { increment: 1 } },
     })
+  }
+
+  async countActiveByBusinessIds(
+    businessIds: string[],
+    tx?: TransactionContext,
+  ): Promise<Map<string, number>> {
+    const client = this.getClient(tx)
+    const counts = await client.voucher.groupBy({
+      by: ['businessId'],
+      where: { businessId: { in: businessIds }, status: 'ACTIVE' },
+      _count: true,
+    })
+    return new Map(counts.map((c) => [c.businessId, c._count]))
   }
 }

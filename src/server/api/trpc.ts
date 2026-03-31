@@ -2,6 +2,7 @@ import { initTRPC, TRPCError } from '@trpc/server'
 import superjson from 'superjson'
 import { ZodError } from 'zod'
 import { db } from '@/infrastructure/db/prisma'
+import { auth } from '@/auth'
 import type { UserRole } from '@/domain/value-objects/UserRole'
 
 /**
@@ -21,11 +22,24 @@ interface Session {
  * Creates the context for incoming requests
  */
 export const createTRPCContext = async (opts: { headers: Headers }) => {
-  // TODO: Replace with NextAuth session lookup
-  // const session = await auth()
-  const session = process.env.NODE_ENV === 'development'
-    ? await getDevSession(opts.headers)
-    : null
+  let session: Session | null = null
+
+  if (process.env.NODE_ENV === 'development') {
+    console.warn('[auth] Dev auth bypass active — using getDevSession()')
+    session = await getDevSession(opts.headers)
+  } else {
+    const authSession = await auth()
+    if (authSession?.user) {
+      session = {
+        user: {
+          id: authSession.user.id,
+          email: authSession.user.email!,
+          name: authSession.user.name ?? null,
+          role: authSession.user.role,
+        },
+      }
+    }
+  }
 
   return {
     db,

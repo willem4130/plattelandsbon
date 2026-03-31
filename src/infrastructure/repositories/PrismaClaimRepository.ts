@@ -28,13 +28,13 @@ export class PrismaClaimRepository
   }
 
   async findById(id: string, tx?: TransactionContext): Promise<VoucherClaim | null> {
-    const client = this.getClient(tx) as PrismaClient
+    const client = this.getClient(tx)
     const record = await client.voucherClaim.findUnique({ where: { id } })
     return this.mapOrNull(record)
   }
 
   async findByClaimCode(code: string, tx?: TransactionContext): Promise<VoucherClaim | null> {
-    const client = this.getClient(tx) as PrismaClient
+    const client = this.getClient(tx)
     const record = await client.voucherClaim.findUnique({
       where: { claimCode: code },
     })
@@ -46,7 +46,7 @@ export class PrismaClaimRepository
     options?: PaginationOptions,
     tx?: TransactionContext,
   ): Promise<VoucherClaim[]> {
-    const client = this.getClient(tx) as PrismaClient
+    const client = this.getClient(tx)
     const records = await client.voucherClaim.findMany({
       where: { userId },
       orderBy: { claimedAt: 'desc' },
@@ -61,7 +61,7 @@ export class PrismaClaimRepository
     options?: PaginationOptions,
     tx?: TransactionContext,
   ): Promise<VoucherClaim[]> {
-    const client = this.getClient(tx) as PrismaClient
+    const client = this.getClient(tx)
     const records = await client.voucherClaim.findMany({
       where: { voucherId },
       orderBy: { claimedAt: 'desc' },
@@ -80,7 +80,7 @@ export class PrismaClaimRepository
     },
     tx?: TransactionContext,
   ): Promise<VoucherClaim> {
-    const client = this.getClient(tx) as PrismaClient
+    const client = this.getClient(tx)
     const record = await client.voucherClaim.create({ data })
     return this.toDomain(record)
   }
@@ -90,7 +90,7 @@ export class PrismaClaimRepository
     status: ClaimStatus,
     tx?: TransactionContext,
   ): Promise<VoucherClaim> {
-    const client = this.getClient(tx) as PrismaClient
+    const client = this.getClient(tx)
     const record = await client.voucherClaim.update({
       where: { id },
       data: {

@@ -2,6 +2,7 @@ import type { IUseCase } from '@/application/interfaces'
 import type { IVoucherRepository } from '@/domain/repositories/IVoucherRepository'
 import { VoucherNotFoundError } from '@/domain/errors'
 import { DomainError } from '@/domain/errors'
+import { VoucherStatus } from '@/domain/value-objects/VoucherStatus'
 import { VoucherMapper } from '../../mappers/VoucherMapper'
 import type { VoucherResponseDTO } from '../../dtos/VoucherDTO'
 
@@ -21,11 +22,11 @@ export class SubmitVoucherUseCase
     if (voucher.businessId !== input.businessId) {
       throw new DomainError('Voucher does not belong to this business')
     }
-    if (voucher.status !== 'DRAFT') {
+    if (voucher.status !== VoucherStatus.DRAFT) {
       throw new DomainError(`Voucher cannot be submitted (status: ${voucher.status})`)
     }
 
-    const updated = await this.voucherRepo.updateStatus(input.voucherId, 'PENDING')
+    const updated = await this.voucherRepo.updateStatus(input.voucherId, VoucherStatus.PENDING)
     return VoucherMapper.toDTO(updated)
   }
 }

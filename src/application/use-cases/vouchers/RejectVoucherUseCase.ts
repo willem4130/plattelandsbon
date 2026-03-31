@@ -3,6 +3,7 @@ import type { IVoucherRepository } from '@/domain/repositories/IVoucherRepositor
 import type { IDomainEventBus } from '@/domain/events'
 import { createVoucherRejectedEvent } from '@/domain/events'
 import { VoucherNotFoundError, DomainError } from '@/domain/errors'
+import { VoucherStatus } from '@/domain/value-objects/VoucherStatus'
 import { VoucherMapper } from '../../mappers/VoucherMapper'
 import type { VoucherResponseDTO } from '../../dtos/VoucherDTO'
 
@@ -29,7 +30,7 @@ export class RejectVoucherUseCase
 
     const updated = await this.voucherRepo.updateStatus(
       input.voucherId,
-      'REJECTED',
+      VoucherStatus.REJECTED,
       input.reason,
     )
 

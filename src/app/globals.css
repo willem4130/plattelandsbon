@@ -95,6 +95,11 @@
   }
 }
 
+/* Hide scrollbar on carousel containers */
+.snap-x::-webkit-scrollbar {
+  display: none;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;

@@ -1,4 +1,5 @@
 import { Voucher } from '../entities/Voucher'
+import type { DiscountType } from '../value-objects/DiscountType'
 import { VoucherStatus } from '../value-objects/VoucherStatus'
 import type { TransactionContext, PaginationOptions } from '../types'
 
@@ -21,7 +22,7 @@ export interface IVoucherRepository {
     businessId: string
     title: string
     description: string
-    discountType: string
+    discountType: DiscountType
     discountValue?: number
     discountDescription?: string
     terms?: string
@@ -40,4 +41,5 @@ export interface IVoucherRepository {
     tx?: TransactionContext,
   ): Promise<Voucher>
   incrementClaimCount(id: string, tx?: TransactionContext): Promise<void>
+  countActiveByBusinessIds(businessIds: string[], tx?: TransactionContext): Promise<Map<string, number>>
 }

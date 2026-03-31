@@ -10,8 +10,8 @@ export abstract class BaseRepository<TEntity, TPrismaRecord> {
 
   protected abstract toDomain(record: TPrismaRecord): TEntity
 
-  protected getClient(tx?: TransactionContext): PrismaClient | PrismaTransactionClient {
-    return (tx as PrismaTransactionClient | undefined) ?? this.prisma
+  protected getClient(tx?: TransactionContext): PrismaClient {
+    return ((tx as PrismaTransactionClient | undefined) ?? this.prisma) as PrismaClient
   }
 
   protected mapOrNull(record: TPrismaRecord | null): TEntity | null {

@@ -5,6 +5,7 @@ export {
   BusinessNotVerifiedError,
   BusinessCannotBeVerifiedError,
 } from './BusinessErrors'
+export { UserNotFoundError } from './UserErrors'
 export {
   VoucherNotFoundError,
   VoucherNotClaimableError,

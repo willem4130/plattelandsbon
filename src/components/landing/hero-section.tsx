@@ -67,13 +67,13 @@ export function HeroSection({ voucherCount, businessCount }: { voucherCount?: nu
           </div>
           <div className="hero-heading mt-10 max-w-4xl">
             <h1 className="text-4xl font-bold md:text-5xl lg:text-6xl">
-              <span className="inline-block bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent">Ontdek het beste van</span>
+              <span className="inline-block bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent">Gratis kortingsbonnen voor</span>
               <br />
               <span className="inline-block bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 bg-clip-text text-transparent">de Achterhoek</span>
             </h1>
           </div>
           <p className="hero-sub mx-auto mt-5 max-w-2xl text-base text-gray-600 text-balance md:text-lg lg:text-xl">
-            Van Winterswijk tot Zutphen, van Groenlo tot Doetinchem — Oom Gerrit kent de lekkerste restaurants, gezelligste kroegen en mooiste plekjes.
+            Claim bonnen bij de lekkerste restaurants, gezelligste kroegen en leukste activiteiten van het platteland.
           </p>
           <div className="hero-cta mt-10 flex flex-col gap-3 sm:flex-row">
             <Link href="/bonnen" className="glossy-btn flex items-center gap-2 rounded-xl px-6 py-3 text-base font-medium hover:shadow-2xl transition-shadow">

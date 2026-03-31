@@ -3,6 +3,7 @@ import type { IVoucherRepository } from '@/domain/repositories/IVoucherRepositor
 import type { IDomainEventBus } from '@/domain/events'
 import { createVoucherApprovedEvent } from '@/domain/events'
 import { VoucherNotFoundError, DomainError } from '@/domain/errors'
+import { VoucherStatus } from '@/domain/value-objects/VoucherStatus'
 import { VoucherMapper } from '../../mappers/VoucherMapper'
 import type { VoucherResponseDTO } from '../../dtos/VoucherDTO'
 
@@ -26,7 +27,7 @@ export class ApproveVoucherUseCase
       throw new DomainError(`Voucher cannot be approved (status: ${voucher.status})`)
     }
 
-    const updated = await this.voucherRepo.updateStatus(input.voucherId, 'ACTIVE')
+    const updated = await this.voucherRepo.updateStatus(input.voucherId, VoucherStatus.ACTIVE)
 
     await this.eventBus.publish(
       createVoucherApprovedEvent(input.voucherId, voucher.businessId, input.approvedBy, voucher.title),

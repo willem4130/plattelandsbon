@@ -2,6 +2,7 @@ import type { IUseCase } from '@/application/interfaces'
 import type { IVoucherRepository } from '@/domain/repositories/IVoucherRepository'
 import type { IBusinessRepository } from '@/domain/repositories/IBusinessRepository'
 import { BusinessNotFoundError, BusinessNotVerifiedError, DomainError } from '@/domain/errors'
+import { VoucherStatus } from '@/domain/value-objects/VoucherStatus'
 import { VoucherMapper } from '../../mappers/VoucherMapper'
 import type { CreateVoucherDTO, VoucherResponseDTO } from '../../dtos/VoucherDTO'
 import { SlugService } from '@/domain/services/SlugService'
@@ -43,7 +44,7 @@ export class CreateVoucherUseCase
       maxClaims: input.maxClaims,
       image: input.image,
       slug,
-      status: 'DRAFT',
+      status: VoucherStatus.DRAFT,
     })
 
     return VoucherMapper.toDTO(voucher)

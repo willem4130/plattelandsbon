@@ -25,4 +25,5 @@ export interface IBusinessRepository {
     notes?: string,
     tx?: TransactionContext,
   ): Promise<Business>
+  findByIds(ids: string[], tx?: TransactionContext): Promise<Business[]>
 }

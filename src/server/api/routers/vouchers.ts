@@ -14,9 +14,9 @@ import {
   createApproveVoucherUseCase,
   createRejectVoucherUseCase,
   createListPendingVouchersUseCase,
-  voucherRepo,
+  createListActiveVouchersUseCase,
+  createGetVoucherDetailUseCase,
 } from '@/infrastructure/config/container'
-import { VoucherMapper } from '@/application/mappers/VoucherMapper'
 import { mapDomainError } from '@/server/api/helpers/mapDomainError'
 import { TRPCError } from '@trpc/server'
 
@@ -81,8 +81,12 @@ export const vouchersRouter = createTRPCRouter({
 
   // Admin: list pending vouchers
   listPending: adminProcedure.query(async () => {
-    const useCase = createListPendingVouchersUseCase()
-    return await useCase.execute()
+    try {
+      const useCase = createListPendingVouchersUseCase()
+      return await useCase.execute()
+    } catch (error) {
+      mapDomainError(error)
+    }
   }),
 
   // Admin: approve voucher
@@ -121,66 +125,24 @@ export const vouchersRouter = createTRPCRouter({
     }),
 
   // Public: list all active vouchers with business info
-  listActive: publicProcedure.query(async ({ ctx }) => {
-    const vouchers = await ctx.db.voucher.findMany({
-      where: { status: 'ACTIVE' },
-      include: {
-        business: {
-          include: { businessCategories: { include: { category: true } } },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    })
-    return vouchers.map((v) => ({
-      id: v.id,
-      title: v.title,
-      description: v.description,
-      discountType: v.discountType,
-      discountValue: v.discountValue,
-      discountDescription: v.discountDescription,
-      terms: v.terms,
-      slug: v.slug,
-      businessName: v.business.name,
-      businessId: v.business.id,
-      city: v.business.city,
-      categories: v.business.businessCategories.map((bc) => bc.category.slug),
-      maxClaims: v.maxClaims,
-      claimsCount: v.claimsCount,
-      startDate: v.startDate,
-      endDate: v.endDate,
-    }))
+  listActive: publicProcedure.query(async () => {
+    try {
+      const useCase = createListActiveVouchersUseCase()
+      return await useCase.execute()
+    } catch (error) {
+      mapDomainError(error)
+    }
   }),
 
   // Public: get voucher by ID with business info
   getById: publicProcedure
     .input(z.object({ id: z.string() }))
-    .query(async ({ ctx, input }) => {
-      const v = await ctx.db.voucher.findUnique({
-        where: { id: input.id },
-        include: { business: { select: { id: true, name: true, city: true } } },
-      })
-      if (!v) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Voucher not found' })
-      }
-      return {
-        id: v.id,
-        title: v.title,
-        description: v.description,
-        discountType: v.discountType,
-        discountValue: v.discountValue,
-        discountDescription: v.discountDescription,
-        terms: v.terms,
-        minimumPurchase: v.minimumPurchase,
-        slug: v.slug,
-        status: v.status,
-        startDate: v.startDate,
-        endDate: v.endDate,
-        maxClaims: v.maxClaims,
-        claimsCount: v.claimsCount,
-        remainingClaims: v.maxClaims ? v.maxClaims - v.claimsCount : null,
-        businessId: v.business.id,
-        businessName: v.business.name,
-        city: v.business.city,
+    .query(async ({ input }) => {
+      try {
+        const useCase = createGetVoucherDetailUseCase()
+        return await useCase.execute(input.id)
+      } catch (error) {
+        mapDomainError(error)
       }
     }),
 })
