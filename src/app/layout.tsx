@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import { SessionProvider } from 'next-auth/react'
 import { TRPCReactProvider } from '@/trpc/react'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/next'
@@ -23,10 +24,12 @@ export default function RootLayout({
   return (
     <html lang="nl" suppressHydrationWarning>
       <body className={inter.className}>
-        <TRPCReactProvider>
-          {children}
-          {modal}
-        </TRPCReactProvider>
+        <SessionProvider>
+          <TRPCReactProvider>
+            {children}
+            {modal}
+          </TRPCReactProvider>
+        </SessionProvider>
         <Toaster />
         <Analytics />
         <SpeedInsights />

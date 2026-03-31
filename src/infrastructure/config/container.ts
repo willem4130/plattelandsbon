@@ -38,6 +38,8 @@ import { GetClaimByCodeUseCase } from '@/application/use-cases/claims/GetClaimBy
 
 // User use cases
 import { FindOrCreateConsumerUseCase } from '@/application/use-cases/users/FindOrCreateConsumerUseCase'
+import { RegisterUserUseCase } from '@/application/use-cases/users/RegisterUserUseCase'
+import { ValidateCredentialsUseCase } from '@/application/use-cases/users/ValidateCredentialsUseCase'
 import { ListUsersUseCase } from '@/application/use-cases/users/ListUsersUseCase'
 import { GetUserStatsUseCase } from '@/application/use-cases/users/GetUserStatsUseCase'
 import { GetUserByIdUseCase } from '@/application/use-cases/users/GetUserByIdUseCase'
@@ -125,6 +127,14 @@ export function createGetClaimByCodeUseCase() {
 // User use case factories
 export function createFindOrCreateConsumerUseCase() {
   return new FindOrCreateConsumerUseCase(userRepo)
+}
+
+export function createRegisterUserUseCase() {
+  return new RegisterUserUseCase(userRepo)
+}
+
+export function createValidateCredentialsUseCase() {
+  return new ValidateCredentialsUseCase(userRepo)
 }
 
 export function createListUsersUseCase() {

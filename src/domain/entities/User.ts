@@ -4,6 +4,7 @@ export interface UserProps {
   id: string
   email: string
   name: string | null
+  hashedPassword: string | null
   role: UserRole
   image: string | null
   emailVerified: Date | null
@@ -30,6 +31,9 @@ export class User {
   }
   get name() {
     return this.props.name
+  }
+  get hashedPassword() {
+    return this.props.hashedPassword
   }
   get role() {
     return this.props.role

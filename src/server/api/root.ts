@@ -1,4 +1,5 @@
 import { createTRPCRouter } from '@/server/api/trpc'
+import { authRouter } from '@/server/api/routers/auth'
 import { usersRouter } from '@/server/api/routers/users'
 import { businessesRouter } from '@/server/api/routers/businesses'
 import { categoriesRouter } from '@/server/api/routers/categories'
@@ -6,6 +7,7 @@ import { vouchersRouter } from '@/server/api/routers/vouchers'
 import { claimsRouter } from '@/server/api/routers/claims'
 
 export const appRouter = createTRPCRouter({
+  auth: authRouter,
   users: usersRouter,
   businesses: businessesRouter,
   categories: categoriesRouter,

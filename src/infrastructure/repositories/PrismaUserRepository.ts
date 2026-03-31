@@ -18,6 +18,7 @@ export class PrismaUserRepository
       id: record.id,
       email: record.email,
       name: record.name,
+      hashedPassword: record.hashedPassword,
       role: record.role as UserRole,
       image: record.image,
       emailVerified: record.emailVerified,
@@ -70,8 +71,14 @@ export class PrismaUserRepository
     return { users: this.mapMany(records), total }
   }
 
+  async findByEmailWithPassword(email: string, tx?: TransactionContext): Promise<User | null> {
+    const client = this.getClient(tx) as PrismaClient
+    const record = await client.user.findUnique({ where: { email } })
+    return this.mapOrNull(record)
+  }
+
   async create(
-    data: { email: string; name: string; role: UserRole },
+    data: { email: string; name: string; role: UserRole; hashedPassword?: string },
     tx?: TransactionContext,
   ): Promise<User> {
     const client = this.getClient(tx) as PrismaClient
@@ -80,6 +87,7 @@ export class PrismaUserRepository
         email: data.email,
         name: data.name,
         role: data.role,
+        hashedPassword: data.hashedPassword,
       },
     })
     return this.toDomain(record)

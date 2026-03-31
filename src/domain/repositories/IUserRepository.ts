@@ -15,8 +15,9 @@ export interface IUserRepository {
     options?: PaginationOptions,
     tx?: TransactionContext,
   ): Promise<{ users: User[]; total: number }>
+  findByEmailWithPassword(email: string, tx?: TransactionContext): Promise<User | null>
   create(
-    data: { email: string; name: string; role: UserRole },
+    data: { email: string; name: string; role: UserRole; hashedPassword?: string },
     tx?: TransactionContext,
   ): Promise<User>
   countByRole(

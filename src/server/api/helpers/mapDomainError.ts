@@ -4,6 +4,8 @@ import {
   BusinessNotFoundError,
   VoucherNotFoundError,
   UserNotFoundError,
+  UserAlreadyExistsError,
+  InvalidCredentialsError,
   BusinessNotVerifiedError,
   BusinessCannotBeVerifiedError,
   BusinessAlreadyExistsError,
@@ -27,8 +29,12 @@ export function mapDomainError(error: unknown): never {
     throw new TRPCError({ code: 'FORBIDDEN', message: error.message })
   }
 
-  if (error instanceof BusinessAlreadyExistsError) {
+  if (error instanceof BusinessAlreadyExistsError || error instanceof UserAlreadyExistsError) {
     throw new TRPCError({ code: 'CONFLICT', message: error.message })
+  }
+
+  if (error instanceof InvalidCredentialsError) {
+    throw new TRPCError({ code: 'UNAUTHORIZED', message: error.message })
   }
 
   if (

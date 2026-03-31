@@ -6,6 +6,7 @@ import { TreePine, Menu } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { navLinks } from './constants'
+import { UserMenu } from './user-menu'
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -36,11 +37,7 @@ export function Navbar() {
             <Link href="/voor-ondernemers">
               <Button variant="ghost" size="sm">Ondernemer? Meld je aan</Button>
             </Link>
-            <Link href="/business/vouchers">
-              <Button size="sm" className="shadow-lg shadow-primary/25">
-                Mijn bonnen
-              </Button>
-            </Link>
+            <UserMenu />
           </div>
 
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
@@ -55,12 +52,10 @@ export function Navbar() {
                   </Link>
                 ))}
                 <div className="mt-4 flex flex-col gap-2 border-t pt-4">
-                  <Link href="/register/business" onClick={() => setMobileMenuOpen(false)}>
+                  <Link href="/voor-ondernemers" onClick={() => setMobileMenuOpen(false)}>
                     <Button variant="outline" className="w-full">Ondernemer? Meld je aan</Button>
                   </Link>
-                  <Link href="/business/vouchers" onClick={() => setMobileMenuOpen(false)}>
-                    <Button className="w-full">Mijn bonnen</Button>
-                  </Link>
+                  <UserMenu />
                 </div>
               </nav>
             </SheetContent>

@@ -9,10 +9,18 @@ export default auth((req) => {
     return NextResponse.next()
   }
 
+  // Redirect authenticated users away from auth pages
+  if (pathname === '/inloggen' || pathname.startsWith('/inloggen/') || pathname === '/registreren') {
+    if (req.auth) {
+      return NextResponse.redirect(new URL('/', req.url))
+    }
+    return NextResponse.next()
+  }
+
   // Protect admin and business routes in production
   if (pathname.startsWith('/admin') || pathname.startsWith('/business')) {
     if (!req.auth) {
-      return NextResponse.redirect(new URL('/', req.url))
+      return NextResponse.redirect(new URL('/inloggen', req.url))
     }
   }
 
@@ -20,5 +28,5 @@ export default auth((req) => {
 })
 
 export const config = {
-  matcher: ['/admin/:path*', '/business/:path*'],
+  matcher: ['/admin/:path*', '/business/:path*', '/inloggen/:path*', '/registreren'],
 }

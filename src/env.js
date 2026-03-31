@@ -23,6 +23,9 @@ export const env = createEnv({
     // NextAuth
     NEXTAUTH_SECRET: z.string().min(32),
     NEXTAUTH_URL: z.string().url().optional(),
+    // Google OAuth
+    AUTH_GOOGLE_ID: z.string().optional(),
+    AUTH_GOOGLE_SECRET: z.string().optional(),
     // Email (Resend)
     RESEND_API_KEY: z.string().optional(),
     EMAIL_FROM: z.string().email().default('noreply@example.com'),
@@ -58,6 +61,8 @@ export const env = createEnv({
     ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
     NEXTAUTH_URL: process.env.NEXTAUTH_URL,
+    AUTH_GOOGLE_ID: process.env.AUTH_GOOGLE_ID,
+    AUTH_GOOGLE_SECRET: process.env.AUTH_GOOGLE_SECRET,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     EMAIL_FROM: process.env.EMAIL_FROM,
     EMAIL_REPLY_TO: process.env.EMAIL_REPLY_TO,
