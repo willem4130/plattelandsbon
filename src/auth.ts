@@ -77,7 +77,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.id = user.id
         token.role = (user as { role: UserRole }).role
       }
-      if (trigger === 'update') {
+      if (trigger === 'update' && token.id) {
         const dbUser = await db.user.findUnique({
           where: { id: token.id as string },
           select: { role: true },

@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { createTRPCRouter, publicProcedure } from '@/server/api/trpc'
+import { createTRPCRouter, adminProcedure } from '@/server/api/trpc'
 import {
   createListUsersUseCase,
   createGetUserStatsUseCase,
@@ -8,7 +8,7 @@ import {
 import { mapDomainError } from '@/server/api/helpers/mapDomainError'
 
 export const usersRouter = createTRPCRouter({
-  getAll: publicProcedure
+  getAll: adminProcedure
     .input(
       z
         .object({
@@ -28,7 +28,7 @@ export const usersRouter = createTRPCRouter({
       }
     }),
 
-  getStats: publicProcedure.query(async () => {
+  getStats: adminProcedure.query(async () => {
     try {
       const useCase = createGetUserStatsUseCase()
       return await useCase.execute()
@@ -37,7 +37,7 @@ export const usersRouter = createTRPCRouter({
     }
   }),
 
-  getById: publicProcedure
+  getById: adminProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ input }) => {
       try {

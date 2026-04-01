@@ -40,6 +40,6 @@ export interface IVoucherRepository {
     reason?: string,
     tx?: TransactionContext,
   ): Promise<Voucher>
-  incrementClaimCount(id: string, tx?: TransactionContext): Promise<void>
+  incrementClaimCount(id: string, tx?: TransactionContext): Promise<boolean>
   countActiveByBusinessIds(businessIds: string[], tx?: TransactionContext): Promise<Map<string, number>>
 }

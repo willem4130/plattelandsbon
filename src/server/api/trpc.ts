@@ -140,7 +140,7 @@ export const adminProcedure = t.procedure.use(({ ctx, next }) => {
   if (!ctx.session?.user) {
     throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Not authenticated' })
   }
-  if (ctx.session.user.role !== 'ADMIN' && process.env.NODE_ENV !== 'development') {
+  if (ctx.session.user.role !== 'ADMIN') {
     throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin access required' })
   }
   return next({
@@ -157,7 +157,7 @@ export const businessProcedure = t.procedure.use(({ ctx, next }) => {
   if (!ctx.session?.user) {
     throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Not authenticated' })
   }
-  if (ctx.session.user.role !== 'BUSINESS' && process.env.NODE_ENV !== 'development') {
+  if (ctx.session.user.role !== 'BUSINESS') {
     throw new TRPCError({ code: 'FORBIDDEN', message: 'Business access required' })
   }
   return next({

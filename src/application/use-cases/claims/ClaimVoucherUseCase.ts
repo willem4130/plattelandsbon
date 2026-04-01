@@ -44,7 +44,10 @@ export class ClaimVoucherUseCase implements IUseCase<ClaimVoucherInput, ClaimVou
         expiresAt,
       }, tx)
 
-      await this.voucherRepo.incrementClaimCount(input.voucherId, tx)
+      const incremented = await this.voucherRepo.incrementClaimCount(input.voucherId, tx)
+      if (!incremented) {
+        throw new ClaimLimitExceededError(input.voucherId)
+      }
 
       return {
         claimId: claim.id,

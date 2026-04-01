@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { signIn } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { api } from '@/trpc/react'
@@ -11,17 +12,25 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
 export default function RegisterPage() {
+  const router = useRouter()
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
 
   const registerMutation = api.auth.register.useMutation({
     onSuccess: async (_data, variables) => {
       toast.success('Account aangemaakt!')
-      await signIn('credentials', {
+      const result = await signIn('credentials', {
         email: variables.email,
         password: variables.password,
-        redirectTo: '/',
+        redirect: false,
       })
+      if (result?.error) {
+        toast.error('Account aangemaakt maar inloggen mislukt. Probeer handmatig in te loggen.')
+        router.push('/inloggen')
+      } else {
+        router.push('/')
+        router.refresh()
+      }
     },
     onError: (error) => {
       toast.error(error.message)

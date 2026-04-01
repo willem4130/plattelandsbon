@@ -183,12 +183,16 @@ export class PrismaVoucherRepository
     return this.toDomain(record)
   }
 
-  async incrementClaimCount(id: string, tx?: TransactionContext): Promise<void> {
+  async incrementClaimCount(id: string, tx?: TransactionContext): Promise<boolean> {
     const client = this.getClient(tx)
-    await client.voucher.update({
-      where: { id },
-      data: { claimsCount: { increment: 1 } },
-    })
+    // Atomic conditional increment: only increment if maxClaims is null OR claimsCount < maxClaims
+    const result = await client.$executeRaw`
+      UPDATE "Voucher"
+      SET "claimsCount" = "claimsCount" + 1, "updatedAt" = NOW()
+      WHERE "id" = ${id}
+      AND ("maxClaims" IS NULL OR "claimsCount" < "maxClaims")
+    `
+    return result > 0
   }
 
   async countActiveByBusinessIds(
