@@ -10,8 +10,19 @@ import { Toaster } from '@/components/ui/sonner'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Plattelandsbon — Oom Gerrit',
-  description: 'Gratis kortingsbonnen voor restaurants, cafés, wellness, overnachtingen en activiteiten in de Achterhoek. Van Winterswijk tot Zutphen — Oom Gerrit kent de beste plekjes.',
+  title: {
+    default: 'Plattelandsbon — Oom Gerrit',
+    template: '%s — Plattelandsbon',
+  },
+  description: 'Gratis kortingsbonnen voor restaurants, cafes, wellness, overnachtingen en activiteiten in de Achterhoek. Van Winterswijk tot Zutphen — Oom Gerrit kent de beste plekjes.',
+  metadataBase: new URL('https://plattelandsbon.vercel.app'),
+  openGraph: {
+    type: 'website',
+    locale: 'nl_NL',
+    siteName: 'Plattelandsbon',
+    title: 'Plattelandsbon — De beste tips van \u2019t platteland',
+    description: 'Gratis kortingsbonnen voor de Achterhoek. Restaurants, wellness, overnachtingen en meer.',
+  },
 }
 
 export default function RootLayout({

@@ -15,8 +15,12 @@ import { Navbar } from '@/components/landing/navbar'
 import { Footer } from '@/components/landing/footer'
 
 export const metadata: Metadata = {
-  title: 'Voor ondernemers — Plattelandsbon',
+  title: 'Voor ondernemers',
   description: 'Gratis zichtbaarheid voor jouw zaak in de Achterhoek. Geen commissie, eigen bonnen, meer gasten. Meld je aan bij Plattelandsbon.',
+  openGraph: {
+    title: 'Voor ondernemers',
+    description: 'Gratis zichtbaarheid voor jouw zaak. Geen commissie, eigen bonnen, meer gasten.',
+  },
 }
 
 const benefits = [
